@@ -2,10 +2,7 @@ uint32_t effTimer;
 
 void effectsTick() {
   if (!dawnFlag) {
-    int thisDelay;
-    if (currentMode < 5) thisDelay = modes[currentMode].speed;
-    else thisDelay = 50;
-    if (ONflag && millis() - effTimer >= thisDelay) {
+    if (ONflag && millis() - effTimer >= ((currentMode < 5) ? modes[currentMode].speed : 50) ) {
       effTimer = millis();
       switch (currentMode) {
         case 0: sparklesRoutine();

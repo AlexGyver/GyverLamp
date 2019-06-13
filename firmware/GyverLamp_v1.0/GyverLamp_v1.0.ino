@@ -118,7 +118,7 @@ boolean settChanged = false;
 
 void setup() {
   ESP.wdtDisable();
-  ESP.wdtEnable(WDTO_8S);
+  //ESP.wdtEnable(WDTO_8S);
   delay(1000);
   // ЛЕНТА
   FastLED.addLeds<WS2812B, LED_PIN, COLOR_ORDER>(leds, NUM_LEDS)/*.setCorrection( TypicalLEDStrip )*/;
