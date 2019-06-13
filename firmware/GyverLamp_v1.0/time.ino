@@ -8,11 +8,12 @@ void timeTick() {
 
     // проверка рассвета
     if (alarm[thisDay].state &&                                       // день будильника
-        thisTime >= alarm[thisDay].time - dawnOffsets[dawnMode] &&  // позже начала
-        thisTime < alarm[thisDay].time) {                           // раньше конца
-      if (!manualOff) {
+        thisTime >= (alarm[thisDay].time - dawnOffsets[dawnMode]) &&  // позже начала
+        thisTime < (alarm[thisDay].time + DAWN_TIMEOUT) ) {                      // раньше конца + минута
+      if (!manualOff && ONflag) {
         // величина рассвета 0-255
         int dawnPosition = 255 * ((float)(thisTime - (alarm[thisDay].time - dawnOffsets[dawnMode])) / dawnOffsets[dawnMode]);
+        dawnPosition = constrain(dawnPosition, 0, 255);
         CHSV dawnColor = CHSV(map(dawnPosition, 0, 255, 10, 35),
                               map(dawnPosition, 0, 255, 255, 170),
                               map(dawnPosition, 0, 255, 10, DAWN_BRIGHT));

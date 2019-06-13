@@ -1,5 +1,5 @@
 void saveEEPROM() {
-  EEPROM.put(3 * currentMode, modes[currentMode]);
+  EEPROM.put(3 * currentMode, modes[currentMode]);  
   EEPROM.commit();
 }
 
@@ -8,7 +8,7 @@ void eepromTick() {
     settChanged = false;
     eepromTimer = millis();
     saveEEPROM();
-    if (EEPROM.read(100) != currentMode) EEPROM.write(501, currentMode);
+    if (EEPROM.read(101) != currentMode) EEPROM.write(101, currentMode);
     EEPROM.commit();
   }
 }
