@@ -6,6 +6,9 @@ void buttonTick() {
     if (dawnFlag) {
       manualOff = true;
       dawnFlag = false;
+      loadingFlag = true;
+      FastLED.setBrightness(modes[currentMode].brightness);
+      changePower();
     } else {
       if (ONflag) {
         ONflag = false;

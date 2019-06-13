@@ -10,7 +10,7 @@ void timeTick() {
     if (alarm[thisDay].state &&                                       // день будильника
         thisTime >= (alarm[thisDay].time - dawnOffsets[dawnMode]) &&  // позже начала
         thisTime < (alarm[thisDay].time + DAWN_TIMEOUT) ) {                      // раньше конца + минута
-      if (!manualOff && ONflag) {
+      if (!manualOff) {
         // величина рассвета 0-255
         int dawnPosition = 255 * ((float)(thisTime - (alarm[thisDay].time - dawnOffsets[dawnMode])) / dawnOffsets[dawnMode]);
         dawnPosition = constrain(dawnPosition, 0, 255);
@@ -23,9 +23,11 @@ void timeTick() {
         dawnFlag = true;
       }
     } else {
-      dawnFlag = false;
-      manualOff = false;
-      FastLED.setBrightness(modes[currentMode].brightness);
+      if (dawnFlag) {
+        dawnFlag = false;
+        manualOff = false;
+        FastLED.setBrightness(modes[currentMode].brightness);
+      }
     }
 
   }
