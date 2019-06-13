@@ -14,6 +14,7 @@ void parseUDP() {
       currentMode = (byte)inputBuffer.substring(3).toInt();
       loadingFlag = true;
       sendCurrent();
+      FastLED.setBrightness(modes[currentMode].brightness);
     } else if (inputBuffer.startsWith("BRI")) {
       modes[currentMode].brightness = inputBuffer.substring(3).toInt();
       FastLED.setBrightness(modes[currentMode].brightness);

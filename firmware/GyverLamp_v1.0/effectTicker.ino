@@ -45,7 +45,7 @@ void effectsTick() {
 void changePower() {
   if (ONflag) {
     effectsTick();
-    for (int i = 0; i < modes[currentMode].brightness; i += 5) {
+    for (int i = 0; i < modes[currentMode].brightness; i += 8) {
       FastLED.setBrightness(i);
       delay(1);
       FastLED.show();
@@ -54,7 +54,7 @@ void changePower() {
     FastLED.show();
   } else {
     effectsTick();
-    for (int i = modes[currentMode].brightness; i > 8; i -= 5) {
+    for (int i = modes[currentMode].brightness; i > 8; i -= 8) {
       FastLED.setBrightness(i);
       delay(1);
       FastLED.show();

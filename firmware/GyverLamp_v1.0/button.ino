@@ -17,17 +17,18 @@ void buttonTick() {
     }
   }
 
-  if (touch.isDouble()) {
+  if (ONflag && touch.isDouble()) {
     if (++currentMode >= MODE_AMOUNT) currentMode = 0;
+    FastLED.setBrightness(modes[currentMode].brightness);
     loadingFlag = true;
     settChanged = true;
     eepromTimer = millis();
   }
 
-  if (touch.isHolded()) {
+  if (ONflag && touch.isHolded()) {
     brightDirection = !brightDirection;
   }
-  if (touch.isStep()) {
+  if (ONflag && touch.isStep()) {
     if (brightDirection) {
       if (modes[currentMode].brightness < 250) modes[currentMode].brightness += 5;
       else modes[currentMode].brightness = 255;

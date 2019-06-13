@@ -127,6 +127,9 @@ void setup() {
   FastLED.clear();
   FastLED.show();
   randomSeed(analogRead(0));    // пинаем генератор случайных чисел
+  touch.setStepTimeout(100);
+  touch.setClickTimeout(500);
+  
   Serial.begin(115200);
 
   // WI-FI
@@ -189,8 +192,7 @@ void setup() {
   Udp.write(reply);
   Udp.endPacket();
 
-  timeClient.begin();
-  touch.setStepTimeout(100);
+  timeClient.begin();  
 }
 
 void loop() {
