@@ -27,6 +27,13 @@ void buttonTick() {
     settChanged = true;
     eepromTimer = millis();
   }
+  if (ONflag && touch.isTriple()) {
+    if (--currentMode < 0) currentMode = 0;
+    FastLED.setBrightness(modes[currentMode].brightness);
+    loadingFlag = true;
+    settChanged = true;
+    eepromTimer = millis();
+  }
 
   if (ONflag && touch.isHolded()) {
     brightDirection = !brightDirection;

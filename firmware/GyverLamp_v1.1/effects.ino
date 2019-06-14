@@ -35,7 +35,6 @@ void fadePixel(byte i, byte j, byte step) {     // новый фейдер
 // -------------------------------------- огонь ---------------------------------------------
 // эффект "огонь"
 #define SPARKLES 1        // вылетающие угольки вкл выкл
-unsigned char matrixValue[8][16];
 unsigned char line[WIDTH];
 int pcnt = 0;
 
@@ -67,9 +66,8 @@ const unsigned char hueMask[8][16] PROGMEM = {
 void fireRoutine() {
   if (loadingFlag) {
     loadingFlag = false;
-    FastLED.clear();
-    generateLine();
-    memset(matrixValue, 0, sizeof(matrixValue));
+    //FastLED.clear();
+    generateLine();    
   }
   if (pcnt >= 100) {
     shiftUp();
@@ -123,7 +121,7 @@ void drawFrame(int pcnt) {
           - pgm_read_byte(&(valueMask[y][newX]));
 
         CRGB color = CHSV(
-                       modes[1].scale + pgm_read_byte(&(hueMask[y][newX])), // H
+                       modes[1].scale * 2.5 + pgm_read_byte(&(hueMask[y][newX])), // H
                        255, // S
                        (uint8_t)max(0, nextv) // V
                      );
@@ -148,7 +146,7 @@ void drawFrame(int pcnt) {
     uint8_t newX = x;
     if (x > 15) newX = x - 15;
     CRGB color = CHSV(
-                   modes[1].scale + pgm_read_byte(&(hueMask[0][newX])), // H
+                   modes[1].scale * 2.5 + pgm_read_byte(&(hueMask[0][newX])), // H
                    255,           // S
                    (uint8_t)(((100.0 - pcnt) * matrixValue[0][newX] + pcnt * line[newX]) / 100.0) // V
                  );

@@ -107,7 +107,7 @@ boolean dawnFlag = false;
 long thisTime;
 boolean manualOff = false;
 
-byte currentMode = 0;
+int8_t currentMode = 0;
 boolean loadingFlag = true;
 boolean ONflag = true;
 uint32_t eepromTimer;
@@ -115,6 +115,8 @@ boolean settChanged = false;
 // Конфетти, Огонь, Радуга верт., Радуга гориз., Смена цвета,
 // Безумие 3D, Облака 3D, Лава 3D, Плазма 3D, Радуга 3D,
 // Павлин 3D, Зебра 3D, Лес 3D, Океан 3D,
+
+unsigned char matrixValue[8][16];
 
 void setup() {
   ESP.wdtDisable();
@@ -129,7 +131,7 @@ void setup() {
   randomSeed(analogRead(0));    // пинаем генератор случайных чисел
   touch.setStepTimeout(100);
   touch.setClickTimeout(500);
-  
+
   Serial.begin(115200);
 
   // WI-FI
@@ -182,7 +184,7 @@ void setup() {
     alarm[i].time = eeGetInt(5 * i + 50 + 1);
   }
   dawnMode = EEPROM.read(100);
-  currentMode = EEPROM.read(101);
+  currentMode = (int8_t)EEPROM.read(101);
 
   // отправляем настройки
   sendCurrent();
@@ -192,7 +194,8 @@ void setup() {
   Udp.write(reply);
   Udp.endPacket();
 
-  timeClient.begin();  
+  timeClient.begin();
+  memset(matrixValue, 0, sizeof(matrixValue));
 }
 
 void loop() {
