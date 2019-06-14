@@ -40,11 +40,13 @@ void buttonTick() {
   }
   if (ONflag && touch.isStep()) {
     if (brightDirection) {
-      if (modes[currentMode].brightness < 250) modes[currentMode].brightness += 5;
+      if (modes[currentMode].brightness < 10) modes[currentMode].brightness += 1;
+      else if (modes[currentMode].brightness < 250) modes[currentMode].brightness += 5;
       else modes[currentMode].brightness = 255;
     } else {
-      if (modes[currentMode].brightness >= 5) modes[currentMode].brightness -= 5;
-      else modes[currentMode].brightness = 0;
+      if (modes[currentMode].brightness > 15) modes[currentMode].brightness -= 5;
+      else if (modes[currentMode].brightness > 1) modes[currentMode].brightness -= 1;
+      else modes[currentMode].brightness = 1;
     }
     FastLED.setBrightness(modes[currentMode].brightness);
     settChanged = true;
