@@ -54,6 +54,8 @@
 * Адресная лента (для DIY матрицы) http://ali.ski/2dmOe_  http://ali.ski/rqgqdq  http://ali.ski/4Ma9iH
 * Сенсорная кнопка http://ali.ski/aWQBAa  http://ali.ski/rsOrSB
 * БП 5V (брать 3A минимум) http://ali.ski/K-CThT  http://ali.ski/3UWXJ
+* Проводочки http://ali.ski/JQRler  http://ali.ski/_SuCF
+* Плафон https://leroymerlin.ru/product/plafon-cilindr-18212968/
 
 ## Вам скорее всего пригодится
 * [Всё для пайки (паяльники и примочки)](http://alexgyver.ru/all-for-soldering/)
