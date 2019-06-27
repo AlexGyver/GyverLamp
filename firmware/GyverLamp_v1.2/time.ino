@@ -1,6 +1,6 @@
-void timeTick() {
-  timeClient.update();
+void timeTick() {  
   if (timeTimer.isReady()) {
+    timeClient.update();
     byte thisDay = timeClient.getDay();
     if (thisDay == 0) thisDay = 7;  // воскресенье это 0
     thisDay--;
