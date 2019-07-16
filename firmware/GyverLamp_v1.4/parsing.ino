@@ -1,15 +1,35 @@
-void parseUDP() {
-  int packetSize = Udp.parsePacket();
-  if (packetSize) {
-    int n = Udp.read(packetBuffer, UDP_TX_PACKET_MAX_SIZE);
+void parseUDP()
+{
+  int32_t packetSize = Udp.parsePacket();
+
+  if (packetSize)
+  {
+    int32_t n = Udp.read(packetBuffer, UDP_TX_PACKET_MAX_SIZE);
     packetBuffer[n] = 0;
     inputBuffer = packetBuffer;
 
-    if (inputBuffer.startsWith("DEB")) {
-      inputBuffer = "OK " + timeClient.getFormattedTime();
-    } else if (inputBuffer.startsWith("GET")) {
+    #ifdef GENERAL_DEBUG
+    Serial.print("Inbound UDP packet: ");
+    Serial.println(inputBuffer);
+    #endif
+
+    if (inputBuffer.startsWith("DEB"))
+    {
+      inputBuffer =
+        #ifdef USE_NTP
+        "OK " + timeClient.getFormattedTime();
+        #else
+        "OK --:--";
+        #endif
+    }
+
+    else if (inputBuffer.startsWith("GET"))
+    {
       sendCurrent();
-    } else if (inputBuffer.startsWith("EFF")) {
+    }
+
+    else if (inputBuffer.startsWith("EFF"))
+    {
       saveEEPROM();
       currentMode = (byte)inputBuffer.substring(3).toInt();
       loadingFlag = true;
@@ -17,40 +37,71 @@ void parseUDP() {
       delay(1);
       sendCurrent();
       FastLED.setBrightness(modes[currentMode].brightness);
-    } else if (inputBuffer.startsWith("BRI")) {
-      modes[currentMode].brightness = inputBuffer.substring(3).toInt();
+    }
+
+    else if (inputBuffer.startsWith("BRI"))
+    {
+      #ifdef GENERAL_DEBUG
+      Serial.printf("New brightness value: %d\n", inputBuffer.substring(3).toInt());
+      #endif
+      
+      modes[currentMode].brightness = constrain(inputBuffer.substring(3).toInt(), 0, 255);
       FastLED.setBrightness(modes[currentMode].brightness);
       settChanged = true;
       eepromTimer = millis();
-    } else if (inputBuffer.startsWith("SPD")) {
+
+      #ifdef GENERAL_DEBUG
+      Serial.printf("modes[currentMode].brightness: %d\n", modes[currentMode].brightness);
+      #endif
+    }
+
+    else if (inputBuffer.startsWith("SPD"))
+    {
       modes[currentMode].speed = inputBuffer.substring(3).toInt();
       loadingFlag = true;
       settChanged = true;
       eepromTimer = millis();
-    } else if (inputBuffer.startsWith("SCA")) {
+    }
+
+    else if (inputBuffer.startsWith("SCA"))
+    {
       modes[currentMode].scale = inputBuffer.substring(3).toInt();
       loadingFlag = true;
       settChanged = true;
       eepromTimer = millis();
-    } else if (inputBuffer.startsWith("P_ON")) {
+    }
+
+    else if (inputBuffer.startsWith("P_ON"))
+    {
       ONflag = true;
       changePower();
       sendCurrent();
-    } else if (inputBuffer.startsWith("P_OFF")) {
+    }
+
+    else if (inputBuffer.startsWith("P_OFF"))
+    {
       ONflag = false;
       changePower();
       sendCurrent();
-    } else if (inputBuffer.startsWith("ALM_SET")) {
+    }
+
+    else if (inputBuffer.startsWith("ALM_SET"))
+    {
       byte alarmNum = (char)inputBuffer[7] - '0';
       alarmNum -= 1;
-      if (inputBuffer.indexOf("ON") != -1) {
+      if (inputBuffer.indexOf("ON") != -1)
+      {
         alarm[alarmNum].state = true;
         inputBuffer = "alm #" + String(alarmNum + 1) + " ON";
-      } else if (inputBuffer.indexOf("OFF") != -1) {
+      }
+      else if (inputBuffer.indexOf("OFF") != -1)
+      {
         alarm[alarmNum].state = false;
         inputBuffer = "alm #" + String(alarmNum + 1) + " OFF";
-      } else {
-        int almTime = inputBuffer.substring(8).toInt();
+      }
+      else
+      {
+        int32_t almTime = inputBuffer.substring(8).toInt();
         alarm[alarmNum].time = almTime;
         byte hour = floor(almTime / 60);
         byte minute = almTime - hour * 60;
@@ -59,9 +110,15 @@ void parseUDP() {
                       ":" + String(minute);
       }
       saveAlarm(alarmNum);
-    } else if (inputBuffer.startsWith("ALM_GET")) {
+    }
+
+    else if (inputBuffer.startsWith("ALM_GET"))
+    {
       sendAlarms();
-    } else if (inputBuffer.startsWith("DAWN")) {
+    }
+
+    else if (inputBuffer.startsWith("DAWN")) 
+    {
       dawnMode = inputBuffer.substring(4).toInt() - 1;
       saveDawnMmode();
     }
@@ -71,10 +128,17 @@ void parseUDP() {
     Udp.beginPacket(Udp.remoteIP(), Udp.remotePort());
     Udp.write(reply);
     Udp.endPacket();
+
+    #ifdef GENERAL_DEBUG
+    Serial.print("Outbound UDP packet: ");
+    Serial.println(reply);
+    Serial.println();
+    #endif
   }
 }
 
-void sendCurrent() {
+void sendCurrent()
+{
   inputBuffer = "CURR";
   inputBuffer += " ";
   inputBuffer += String(currentMode);
@@ -88,7 +152,8 @@ void sendCurrent() {
   inputBuffer += String(ONflag);
 }
 
-void sendAlarms() {
+void sendAlarms()
+{
   inputBuffer = "ALMS ";
   for (byte i = 0; i < 7; i++) {
     inputBuffer += String(alarm[i].state);

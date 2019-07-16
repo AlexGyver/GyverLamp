@@ -1,19 +1,25 @@
-void timeTick() {
-  if (ESP_MODE == 1) {    
-    if (timeTimer.isReady()) {
+#ifdef USE_NTP
+void timeTick()
+{
+  if (ESP_MODE == 1)
+  {
+    if (timeTimer.isReady())
+    {
       timeClient.update();
       byte thisDay = timeClient.getDay();
-      if (thisDay == 0) thisDay = 7;  // воскресенье это 0
+      if (thisDay == 0) thisDay = 7;                                      // воскресенье это 0
       thisDay--;
       thisTime = timeClient.getHours() * 60 + timeClient.getMinutes();
 
       // проверка рассвета
-      if (alarm[thisDay].state &&                                       // день будильника
-          thisTime >= (alarm[thisDay].time - dawnOffsets[dawnMode]) &&  // позже начала
-          thisTime < (alarm[thisDay].time + DAWN_TIMEOUT) ) {                      // раньше конца + минута
-        if (!manualOff) {
+      if (alarm[thisDay].state &&                                         // день будильника
+          thisTime >= (alarm[thisDay].time - dawnOffsets[dawnMode]) &&    // позже начала
+          thisTime < (alarm[thisDay].time + DAWN_TIMEOUT))                // раньше конца + минута
+      {
+        if (!manualOff)
+        {
           // величина рассвета 0-255
-          int dawnPosition = 255 * ((float)(thisTime - (alarm[thisDay].time - dawnOffsets[dawnMode])) / dawnOffsets[dawnMode]);
+          int32_t dawnPosition = 255 * ((float)(thisTime - (alarm[thisDay].time - dawnOffsets[dawnMode])) / dawnOffsets[dawnMode]);
           dawnPosition = constrain(dawnPosition, 0, 255);
           CHSV dawnColor = CHSV(map(dawnPosition, 0, 255, 10, 35),
                                 map(dawnPosition, 0, 255, 255, 170),
@@ -23,14 +29,17 @@ void timeTick() {
           FastLED.show();
           dawnFlag = true;
         }
-      } else {
-        if (dawnFlag) {
+      }
+      else
+      {
+        if (dawnFlag)
+        {
           dawnFlag = false;
           manualOff = false;
           FastLED.setBrightness(modes[currentMode].brightness);
         }
       }
-
     }
   }
 }
+#endif USE_NTP

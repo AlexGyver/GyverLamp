@@ -1,10 +1,14 @@
 uint32_t effTimer;
 
-void effectsTick() {
-  if (!dawnFlag) {
-    if (ONflag && millis() - effTimer >= ((currentMode < 5 || currentMode > 13) ? modes[currentMode].speed : 50) ) {
+void effectsTick()
+{
+  if (!dawnFlag)
+  {
+    if (ONflag && millis() - effTimer >= ((currentMode < 5 || currentMode > 13) ? modes[currentMode].speed : 50) )
+    {
       effTimer = millis();
-      switch (currentMode) {
+      switch (currentMode)
+      {
         case 0: sparklesRoutine();
           break;
         case 1: fireRoutine();
@@ -47,10 +51,17 @@ void effectsTick() {
   }
 }
 
-void changePower() {
-  if (ONflag) {
+void changePower()
+{
+  #ifdef GENERAL_DEBUG
+  Serial.printf("changePower(); brightness: %d\n", modes[currentMode].brightness);
+  #endif
+
+  if (ONflag)
+  {
     effectsTick();
-    for (int i = 0; i < modes[currentMode].brightness; i += 8) {
+    for (uint8_t i = 0; i < modes[currentMode].brightness; i = constrain(i + 8, 0, modes[currentMode].brightness))
+    {
       FastLED.setBrightness(i);
       delay(1);
       FastLED.show();
@@ -58,9 +69,12 @@ void changePower() {
     FastLED.setBrightness(modes[currentMode].brightness);
     delay(2);
     FastLED.show();
-  } else {
+  }
+  else
+  {
     effectsTick();
-    for (int i = modes[currentMode].brightness; i > 8; i -= 8) {
+    for (uint8_t i = modes[currentMode].brightness; i > 0; i = constrain(i - 8, 0, modes[currentMode].brightness))
+    {
       FastLED.setBrightness(i);
       delay(1);
       FastLED.show();
