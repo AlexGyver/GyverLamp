@@ -45,7 +45,7 @@ void parseUDP()
       Serial.printf("New brightness value: %d\n", inputBuffer.substring(3).toInt());
       #endif
       
-      modes[currentMode].brightness = constrain(inputBuffer.substring(3).toInt(), 0, 255);
+      modes[currentMode].brightness = constrain(inputBuffer.substring(3).toInt(), 1, 255);
       FastLED.setBrightness(modes[currentMode].brightness);
       settChanged = true;
       eepromTimer = millis();

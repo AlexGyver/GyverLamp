@@ -3,10 +3,10 @@
 // ------------- конфетти --------------
 void sparklesRoutine()
 {
-  for (byte i = 0; i < modes[0].scale; i++)
+  for (uint8_t i = 0; i < modes[0].scale; i++)
   {
-    byte x = random(0, WIDTH);
-    byte y = random(0, HEIGHT);
+    uint8_t x = random(0, WIDTH);
+    uint8_t y = random(0, HEIGHT);
     if (getPixColorXY(x, y) == 0)
       leds[getPixelNumber(x, y)] = CHSV(random(0, 255), 255, 255);
   }
@@ -14,18 +14,18 @@ void sparklesRoutine()
 }
 
 // функция плавного угасания цвета для всех пикселей
-void fader(byte step)
+void fader(uint8_t step)
 {
-  for (byte i = 0; i < WIDTH; i++)
+  for (uint8_t i = 0; i < WIDTH; i++)
   {
-    for (byte j = 0; j < HEIGHT; j++)
+    for (uint8_t j = 0; j < HEIGHT; j++)
     {
       fadePixel(i, j, step);
     }
   }
 }
 
-void fadePixel(byte i, byte j, byte step)                   // новый фейдер
+void fadePixel(uint8_t i, uint8_t j, uint8_t step)                   // новый фейдер
 {
   int32_t pixelNum = getPixelNumber(i, j);
   if (getPixColor(pixelNum) == 0) return;
@@ -180,15 +180,15 @@ void drawFrame(int32_t pcnt)
   }
 }
 
-byte hue;
+uint8_t hue;
 // ------------- радуга ----------------
 void rainbowVertical()
 {
   hue += 2;
-  for (byte j = 0; j < HEIGHT; j++)
+  for (uint8_t j = 0; j < HEIGHT; j++)
   {
-    CHSV thisColor = CHSV((byte)(hue + j * modes[2].scale), 255, 255);
-    for (byte i = 0; i < WIDTH; i++)
+    CHSV thisColor = CHSV((uint8_t)(hue + j * modes[2].scale), 255, 255);
+    for (uint8_t i = 0; i < WIDTH; i++)
       drawPixelXY(i, j, thisColor);
   }
 }
@@ -196,10 +196,10 @@ void rainbowVertical()
 void rainbowHorizontal()
 {
   hue += 2;
-  for (byte i = 0; i < WIDTH; i++)
+  for (uint8_t i = 0; i < WIDTH; i++)
   {
-    CHSV thisColor = CHSV((byte)(hue + i * modes[3].scale), 255, 255);
-    for (byte j = 0; j < HEIGHT; j++)
+    CHSV thisColor = CHSV((uint8_t)(hue + i * modes[3].scale), 255, 255);
+    for (uint8_t j = 0; j < HEIGHT; j++)
       drawPixelXY(i, j, thisColor);                         //leds[getPixelNumber(i, j)] = thisColor;
   }
 }
@@ -227,19 +227,19 @@ void colorRoutine()
 void snowRoutine()
 {
   // сдвигаем всё вниз
-  for (byte x = 0; x < WIDTH; x++)
+  for (uint8_t x = 0; x < WIDTH; x++)
   {
-    for (byte y = 0; y < HEIGHT - 1; y++)
+    for (uint8_t y = 0; y < HEIGHT - 1; y++)
     {
       drawPixelXY(x, y, getPixColorXY(x, y + 1));
     }
   }
 
-  for (byte x = 0; x < WIDTH; x++)
+  for (uint8_t x = 0; x < WIDTH; x++)
   {
     // заполняем случайно верхнюю строку
     // а также не даём двум блокам по вертикали вместе быть
-    if (getPixColorXY(x, HEIGHT - 2) == 0 && (random(0, modes[15].scale) == 0))
+    if (getPixColorXY(x, HEIGHT - 2) == 0 && (random(0, 100 - modes[15].scale) == 0))
       drawPixelXY(x, HEIGHT - 1, 0xE0FFFF - 0x101010 * random(0, 4));
     else
       drawPixelXY(x, HEIGHT - 1, 0x000000);
@@ -249,12 +249,12 @@ void snowRoutine()
 // ------------- матрица ---------------
 void matrixRoutine()
 {
-  for (byte x = 0; x < WIDTH; x++)
+  for (uint8_t x = 0; x < WIDTH; x++)
   {
     // заполняем случайно верхнюю строку
     uint32_t thisColor = getPixColorXY(x, HEIGHT - 1);
     if (thisColor == 0)
-      drawPixelXY(x, HEIGHT - 1, 0x00FF00 * (random(0, modes[16].scale) == 0));
+      drawPixelXY(x, HEIGHT - 1, 0x00FF00 * (random(0, 100 - modes[16].scale) == 0));
     else if (thisColor < 0x002000)
       drawPixelXY(x, HEIGHT - 1, 0);
     else
@@ -262,9 +262,9 @@ void matrixRoutine()
   }
 
   // сдвигаем всё вниз
-  for (byte x = 0; x < WIDTH; x++)
+  for (uint8_t x = 0; x < WIDTH; x++)
   {
-    for (byte y = 0; y < HEIGHT - 1; y++)
+    for (uint8_t y = 0; y < HEIGHT - 1; y++)
     {
       drawPixelXY(x, y, getPixColorXY(x, y + 1));
     }
@@ -276,7 +276,7 @@ void matrixRoutine()
 int32_t lightersPos[2][LIGHTERS_AM];
 int8_t lightersSpeed[2][LIGHTERS_AM];
 CHSV lightersColor[LIGHTERS_AM];
-byte loopCounter;
+uint8_t loopCounter;
 
 int32_t angle[LIGHTERS_AM];
 int32_t speedV[LIGHTERS_AM];
@@ -288,7 +288,7 @@ void lightersRoutine()
   {
     loadingFlag = false;
     randomSeed(millis());
-    for (byte i = 0; i < LIGHTERS_AM; i++)
+    for (uint8_t i = 0; i < LIGHTERS_AM; i++)
     {
       lightersPos[0][i] = random(0, WIDTH * 10);
       lightersPos[1][i] = random(0, HEIGHT * 10);
@@ -299,7 +299,7 @@ void lightersRoutine()
   }
   FastLED.clear();
   if (++loopCounter > 20) loopCounter = 0;
-  for (byte i = 0; i < modes[17].scale; i++)
+  for (uint8_t i = 0; i < modes[17].scale; i++)
   {
     if (loopCounter == 0)                                   // меняем скорость каждые 255 отрисовок
     {
@@ -336,7 +336,7 @@ void lightersRoutine()
   {
     loadingFlag = false;
     randomSeed(millis());
-    for (byte i = 0; i < LIGHTERS_AM; i++)
+    for (uint8_t i = 0; i < LIGHTERS_AM; i++)
     {
       lightersPos[0][i] = random(0, WIDTH * 10);
       lightersPos[1][i] = random(0, HEIGHT * 10);
@@ -351,7 +351,7 @@ void lightersRoutine()
   FastLED.clear();
   if (++loopCounter > 20) loopCounter = 0;
 
-  for (byte i = 0; i < modes[17].scale; i++)
+  for (uint8_t i = 0; i < modes[17].scale; i++)
   {
     if (loopCounter == 0)                                   // меняем скорость каждые 255 отрисовок
     {

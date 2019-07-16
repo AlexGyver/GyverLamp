@@ -16,16 +16,8 @@ void buttonTick()
     }
     else
     {
-      if (ONflag)
-      {
-        ONflag = false;
-        changePower();
-      }
-      else
-      {
-        ONflag = true;
-        changePower();
-      }
+      ONflag = !ONflag;
+      changePower();
     }
   }
 

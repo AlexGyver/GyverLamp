@@ -16,7 +16,7 @@ void timeTick()
           thisTime >= (alarm[thisDay].time - dawnOffsets[dawnMode]) &&    // позже начала
           thisTime < (alarm[thisDay].time + DAWN_TIMEOUT))                // раньше конца + минута
       {
-        if (!manualOff)
+        if (!manualOff)                                                   // будильник не был выключен вручную (из приложения или кнопкой)
         {
           // величина рассвета 0-255
           int32_t dawnPosition = 255 * ((float)(thisTime - (alarm[thisDay].time - dawnOffsets[dawnMode])) / dawnOffsets[dawnMode]);
@@ -26,6 +26,7 @@ void timeTick()
                                 map(dawnPosition, 0, 255, 10, DAWN_BRIGHT));
           fill_solid(leds, NUM_LEDS, dawnColor);
           FastLED.setBrightness(255);
+          delay(1);
           FastLED.show();
           dawnFlag = true;
         }
@@ -36,7 +37,7 @@ void timeTick()
         {
           dawnFlag = false;
           manualOff = false;
-          FastLED.setBrightness(modes[currentMode].brightness);
+          changePower();                                                  // выключение матрицы или установка яркости текущего эффекта в засисимости от того, была ли включена лампа до срабатывания будильника
         }
       }
     }

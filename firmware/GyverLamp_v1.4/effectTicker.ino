@@ -4,7 +4,7 @@ void effectsTick()
 {
   if (!dawnFlag)
   {
-    if (ONflag && millis() - effTimer >= ((currentMode < 5 || currentMode > 13) ? modes[currentMode].speed : 50) )
+    if (ONflag && (millis() - effTimer >= ((currentMode < 5 || currentMode > 13) ? modes[currentMode].speed : 50)))
     {
       effTimer = millis();
       switch (currentMode)

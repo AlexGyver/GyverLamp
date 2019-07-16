@@ -167,7 +167,7 @@ void lavaNoise()
 void fillNoiseLED()
 {
   uint8_t dataSmoothing = 0;
-  if ( speed < 50)
+  if (speed < 50)
   {
     dataSmoothing = 200 - (speed * 4);
   }
