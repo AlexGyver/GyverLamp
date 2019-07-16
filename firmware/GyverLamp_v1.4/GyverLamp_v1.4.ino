@@ -176,8 +176,25 @@ unsigned char matrixValue[8][16];
 
 void setup()
 {
+  Serial.begin(115200);
+  Serial.println();
+
   ESP.wdtDisable();
   //ESP.wdtEnable(WDTO_8S);
+
+  #ifdef ESP_USE_BUTTON
+  touch.setStepTimeout(100);
+  touch.setClickTimeout(500);
+  buttonTick();
+  if(touch.state())                                         // сброс сохранённых SSID и пароля при старте с зажатой кнопкой
+  {
+    wifiManager.resetSettings();
+
+    #ifdef GENERAL_DEBUG
+    Serial.println("Настройки WiFiManager сброшены");
+    #endif
+  }
+  #endif
 
   // ЛЕНТА
   FastLED.addLeds<WS2812B, LED_PIN, COLOR_ORDER>(leds, NUM_LEDS)/*.setCorrection( TypicalLEDStrip )*/;
@@ -185,14 +202,6 @@ void setup()
   if (CURRENT_LIMIT > 0) FastLED.setMaxPowerInVoltsAndMilliamps(5, CURRENT_LIMIT);
   FastLED.clear();
   FastLED.show();
-
-  #ifdef ESP_USE_BUTTON
-  touch.setStepTimeout(100);
-  touch.setClickTimeout(500);
-  #endif
-
-  Serial.begin(115200);
-  Serial.println();
 
   // WI-FI
   wifiManager.setDebugOutput(WIFIMAN_DEBUG);                // вывод отладочных сообщений
@@ -224,8 +233,6 @@ void setup()
       Serial.println("WiFi сеть не определена, запуск WiFi точки доступа для настройки параметров подключения к WiFi сети...");
     }
     
-    //wifiManager.resetSettings();
-
     if (STA_STATIC_IP)
     {
       wifiManager.setSTAStaticIPConfig(
