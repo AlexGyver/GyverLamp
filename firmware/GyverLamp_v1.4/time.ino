@@ -37,6 +37,9 @@ void timeTick()
         {
           dawnFlag = false;
           manualOff = false;
+          FastLED.clear();
+          delay(2);
+          FastLED.show();
           changePower();                                                  // выключение матрицы или установка яркости текущего эффекта в засисимости от того, была ли включена лампа до срабатывания будильника
         }
       }

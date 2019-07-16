@@ -43,6 +43,13 @@ void buttonTick()
     delay(1);
   }
 
+  if (ONflag && touch.isQuadruple())
+  {
+    #ifdef OTA
+    otaManager.RequestOtaUpdate();
+    #endif
+  }
+
   if (ONflag && touch.isHolded())
   {
     brightDirection = !brightDirection;
