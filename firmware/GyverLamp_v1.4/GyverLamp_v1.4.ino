@@ -26,8 +26,8 @@
 #define DAWN_TIMEOUT 1        // сколько рассвет светит после времени будильника, минут
 
 // ---------- МАТРИЦА ---------
-#define BRIGHTNESS 40         // стандартная маскимальная яркость (0-255)
-#define CURRENT_LIMIT 2000    // лимит по току в миллиамперах, автоматически управляет яркостью (пожалей свой блок питания!) 0 - выключить лимит
+#define BRIGHTNESS 10         // стандартная маскимальная яркость (0-255)
+#define CURRENT_LIMIT 200    // лимит по току в миллиамперах, автоматически управляет яркостью (пожалей свой блок питания!) 0 - выключить лимит
 
 #define WIDTH 16              // ширина матрицы
 #define HEIGHT 16             // высота матрицы
@@ -45,7 +45,7 @@
 // 0 - точка доступа
 // 1 - локальный
 byte IP_AP[] = {192, 168, 4, 66};   // статический IP точки доступа (менять только последнюю цифру)
-byte IP_STA[] = {192, 168, 1, 66};  // статический IP локальный (менять только последнюю цифру)
+byte IP_STA[] = {192, 168, 0, 66};  // статический IP локальный (менять только последнюю цифру)
 
 // ----- AP (точка доступа) -------
 #define AP_SSID "GyverLamp"
@@ -88,6 +88,7 @@ WiFiUDP ntpUDP;
 NTPClient timeClient(ntpUDP, NTP_ADDRESS, GMT * 3600, NTP_INTERVAL);
 timerMinim timeTimer(3000);
 GButton touch(BTN_PIN, LOW_PULL, NORM_OPEN);
+ESP8266WebServer http(8080); // запуск слушателя 8080 порта(эйкей вебсервер)
 
 // ----------------- ПЕРЕМЕННЫЕ ------------------
 const char* autoConnectSSID = AC_SSID;
@@ -115,7 +116,7 @@ boolean dawnFlag = false;
 long thisTime;
 boolean manualOff = false;
 
-int8_t currentMode = 0;
+int8_t currentMode = 3;
 boolean loadingFlag = true;
 boolean ONflag = true;
 uint32_t eepromTimer;
@@ -156,6 +157,7 @@ void setup() {
     Serial.println(myIP);
 
     server.begin();
+    
   } else {                // подключаемся к роутеру
     Serial.print("WiFi manager");
     WiFiManager wifiManager;
@@ -213,6 +215,8 @@ void setup() {
   timeClient.begin();
   memset(matrixValue, 0, sizeof(matrixValue));
 
+  webserver(); 
+    
   randomSeed(micros());
 }
 
@@ -222,6 +226,7 @@ void loop() {
   eepromTick();
   timeTick();
   buttonTick();
+  http.handleClient();
   ESP.wdtFeed();   // пнуть собаку
   yield();
 }
