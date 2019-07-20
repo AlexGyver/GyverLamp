@@ -8,10 +8,20 @@ void webserver(){
   http.on("/setconfig", routeSetConfig); 
   /** получить текущие настройки/конфигурацию */
   http.on("/getconfig", routeGetConfig); 
+  
+  /** страница настройка таймера вкл/выкл */
+//  http.on("/timer", routeTimer); 
   /** прием конфигурации таймера вкл/выкл */
-  //http.on("/settimerconfig", routeGetTimerConfig); 
+//  http.on("/settimerconfig", routeGetTimerConfig); 
   /** получить текущие настройки/конфигурацию таймера вкл/выкл */
-  //http.on("/gettimerconfig", routeSetTimerConfig); 
+//  http.on("/gettimerconfig", routeSetTimerConfig); 
+  
+  /** страница настройка будильника */
+  http.on("/alarm", routeAlarm); 
+  /** прием конфигурации будильника */
+  http.on("/setalarmconfig", routeSetAlarmConfig); 
+  /** получить текущие настройки/конфигурацию будильника */
+  http.on("/getalarmconfig", routeGetAlarmConfig); 
   
   http.begin();
   
@@ -33,12 +43,85 @@ void responseHtml(String out, String title = "AlexGyver Lamp", int code = 200){
       html += "<script src=\"https://demos.jquerymobile.com/1.4.5/js/jquery.mobile-1.4.5.min.js\"></script>";
     html += "</head>";
     html += "<body>";
-      html += "<div data-role='header' class='jqm-header'><h2><a class='ui-link' data-ajax='false' href='/'>AlexGyver Lamp</a></h2></div>";
-      html += "<div role='main' class='ui-content jqm-content'>";
-      html += "";
-      html += out;
-      html += "";
-      html += "</div>";
+      html += "<div data-role='page'>";
+        html += "<div data-role='header' class='jqm-header'><h2><a class='ui-link' data-ajax='false' href='/'><img style='width: 100%' src='//i0.wp.com/alexgyver.ru/wp-content/uploads/2018/07/site_mob-1.png'></a></h2></div><!-- /header -->";
+        html += "<div role='main' class='ui-content jqm-content' style='padding-bottom: 100px;'>";
+        html += "";
+        html += out;
+        html += "";
+        html += "</div>";
+        html += "<div data-role='footer' data-theme='b' style='position: fixed;width: 100%;bottom: 0;z-index: 1;'>";
+            html += "<div data-role='navbar' data-iconpos='bottom'>";
+                html += "<ul>";
+                    html += "<li><a href='/' data-ajax='false' data-icon='gear'>Основные настройки</a></li>"; // сдлеать активной class='ui-btn-active'
+                    html += "<li><a href='/alarm' data-ajax='false' data-icon='clock'>Будильник</a></li>";
+                    html += "<!--<li><a href='/timer' data-ajax='false' data-icon='power'>Расписание</a></li>-->";
+                html += "</ul>";
+            html += "</div>"; // .navbar
+        html += "</div>"; // .footer
+      html += "</div>"; // .page
+
+      // js функция отправки/получения данных формы
+      html += "    <script type=\"text/javascript\">\n";
+      html += "    function syncConfig(getconfig = '/getconfig', setconfig = '/setconfig'){\n";
+      html += "        $.ajax({url: getconfig, dataType:'json', success: init});\n";
+      html += "        function init(config){\n";
+      html += "            /**\n";
+      html += "             * костыль/фича\n";
+      html += "             * лень было искать как нормально установить параметы в виджеты\n";
+      html += "             * пока не установятся параметры из ESP, отправка не будет осуществляться\n";
+      html += "             * @type {boolean}\n";
+      html += "             */\n";
+      html += "            window.changeReaction = false;\n";
+      html += "                let timeouts = {};\n";
+      html += "                $('select, input').on('change',(v) => {\n";
+      html += "                    /** если данные не пришли, ничего не отправляем/сохраненяем */\n";
+      html += "                    if(window.changeReaction === false) return;\n";
+      html += "                    let that = $(v.currentTarget), name = that.attr('name'), outData = {};\n";
+      html += "                    /** если в очереди на отправку/сохранение есть такой параметр, то снимим предыдущее значение */\n";
+      html += "                    if(timeouts[name] != undefined)\n";
+      html += "                        clearTimeout(timeouts[name]);\n";
+      html += "                    /**\n";
+      html += "                     * установим измененный параметр в очередь на отправку/сохранение в ESP\n";
+      html += "                     * @type {number}\n";
+      html += "                     */\n";
+      html += "                    timeouts[name] = setTimeout(() => {\n";
+      html += "                        window.changeReaction = false;\n";
+      html += "                        outData[name] = that.val();\n";
+      html += "                        $.ajax({\n";
+      html += "                            url:setconfig,\n";
+      html += "                            data: outData,\n";
+      html += "                            dataType: 'json',\n";
+      html += "                            success: (json) => {\n";
+      html += "                                if(json[name] = outData[name])\n";
+      html += "                                    window.changeReaction = true;\n";
+      html += "                                else\n";
+      html += "                                    alert('Не удалось сохранить настройки.');\n";
+      html += "                                setConfig(json);\n";
+      html += "                            },\n";
+      html += "                            error: (event) => alert(`Не удалось сохранить настройки.\nПроизошла ошибка \"${event.status} ${event.statusText}\".`)\n";
+      html += "                        });\n";
+      html += "                    }, 500);\n";
+      html += "                });\n";
+      html += "                setConfig(config);\n";
+      html += "                /** установим актуальные параметры из ESP */\n";
+      html += "                function setConfig(config){\n";
+      html += "                  window.changeReaction = false;\n";
+      html += "                  for (let key in config){\n";
+      html += "                      let that = $(`[name=${key}]`);\n";
+      html += "                      that.val(config[key]);\n";
+      html += "                      that.trigger('change');\n";
+      html += "                  }\n";
+      html += "                  /**\n";
+      html += "                   * разрешаем вносить изменеия в конфигу\n";
+      html += "                   * @type {boolean}\n";
+      html += "                   */\n";
+      html += "                  window.changeReaction = true;\n";
+      html += "                }\n";
+      html += "        }\n";
+      html += "    }\n";
+      html += "    </script>\n";
+      
     html += "</body>";
   html += "</html>";
   
@@ -75,7 +158,6 @@ void routeGetConfig(){
   String out;
 
   out += "{";
-//  out += "" + include;
   out += "\"currentMode\":\"" + String(currentMode) + "\",";
   out += "\"brightness\":\"" + String(modes[currentMode].brightness) + "\",";
   out += "\"speed\":\"" + String(modes[currentMode].speed) + "\",";
@@ -146,6 +228,80 @@ void routeSetConfig(){
   
 }
 
+void routeAlarm(){
+  String out, days[] = {"пн","вт","ср","чт","пт","сб","вс"};
+  out = "<form>";
+    for (byte i = 0; i < 7; i++) {
+      out += "<div class='ui-field-contain'>";  
+          out += "<label for='day_" + String(i) + "'>"+days[i]+"</label>";
+          out += "<select name='day_" + String(i) + "' id='day_" + String(i) + "' data-role='slider' data-mini='true'>";
+              out += "<option value='0'></option>";
+              out += "<option value='1'></option>";
+          out += "</select>";
+      out += "</div>";
+      out += "<div class='ui-field-contain'><label for='time_" + String(i) + "'>время</label><input name='time_" + String(i) + "' id='time_" + String(i) + "' type='time' value='00:00' /></div>";
+    }
+    
+    out += "<div class='ui-field-contain'>";
+      out += "<label for='dawnMode'>Рассвета за:</label>";
+      out += "<select name='dawnMode' id='dawnMode'>";
+      for(byte i = 0; i <= sizeof(dawnOffsets) - 1; i++){
+       out += "<option value='" + String(i) + "'>" + String(dawnOffsets[i]) + "</option>"; 
+      }
+      out += "</select>";
+    out += "</div>";
+  out += "</form>";
+  
+  out += "<script type='text/javascript'>$(document).ready(()=>{syncConfig('/getalarmconfig','/setalarmconfig');});</script>";
+  
+  responseHtml(out);
+}
+
+void routeSetAlarmConfig(){
+  
+  for (byte i = 0; i < 7; i++) {
+    
+    if(http.hasArg("day_"+String(i))){
+      alarm[i].state = (http.arg("day_" + String(i)).toInt() > 0);
+      saveAlarm(i);
+    }
+    if(http.hasArg("time_"+String(i))){
+      
+      alarm[i].time = http.arg("time_" + String(i)).substring(0,2).toInt() * 60 + http.arg("time_" + String(i)).substring(3,5).toInt();
+      saveAlarm(i);
+    }
+  }
+  
+  if(http.hasArg("dawnMode")){
+    dawnMode = http.arg("dawnMode").toInt();
+    saveDawnMmode();
+  }
+  
+  routeGetAlarmConfig();
+  
+}
+
+void routeGetAlarmConfig(){
+  String out = "{";
+  int _time;
+    
+  for (byte i = 0; i < 7; i++) {
+    out += (alarm[i].state == true) ? "\"day_"+String(i)+"\":\"1\"," : "\"day_"+String(i)+"\":\"0\",";
+    if(alarm[i].time){
+      String h,m;
+      h = (alarm[i].time/60<10) ? "0" + String(alarm[i].time/60) : String(alarm[i].time/60);
+      m = (alarm[i].time%60<10) ? "0" + String(alarm[i].time%60) : String(alarm[i].time%60);
+      out += "\"time_"+String(i)+"\":\""+h+":"+m+"\",";
+    }else{
+      out += "\"time_"+String(i)+"\":\""+timeClient.getHours()+":"+timeClient.getMinutes()+"\",";
+    }
+  }
+
+  out += "\"dawnMode\":\"" + String(dawnMode) + "\"}";
+  
+  http.send(200, "text/json", out);
+}
+
 /**
  * главная страница
  */
@@ -205,68 +361,7 @@ void routeHome(){
       
     
   out += "</form>";
-  
-  out += "    <script type=\"text/javascript\">\n";
-  out += "        $.ajax({url: '/getconfig', dataType:'json', success: init});\n";
-  out += "        //let config = {\"currentMode\":\"4\",\"brightness\":\"255\",\"speed\":\"30\",\"scale\":\"40\",\"on\":\"1\"};\n";
-  out += "        init(config);\n";
-  out += "        function init(config){\n";
-  out += "            /**\n";
-  out += "             * костыль/фича\n";
-  out += "             * лень было искать как нормально установить параметы в виджеты\n";
-  out += "             * пока не установятся параметры из ESP, отправка не будет осуществляться\n";
-  out += "             * @type {boolean}\n";
-  out += "             */\n";
-  out += "            window.changeReaction = false;\n";
-  out += "            $(document).ready(() => {\n";
-  out += "                let timeouts = {};\n";
-  out += "                $('select, input').on('change',(v) => {\n";
-  out += "                    /** если данные не пришли, ничего не отправляем/сохраненяем */\n";
-  out += "                    if(window.changeReaction === false) return;\n";
-  out += "                    let that = $(v.currentTarget), name = that.attr('name'), outData = {};\n";
-  out += "                    /** если в очереди на отправку/сохранение есть такой параметр, то снимим предыдущее значение */\n";
-  out += "                    if(timeouts[name] != undefined)\n";
-  out += "                        clearTimeout(timeouts[name]);\n";
-  out += "                    /**\n";
-  out += "                     * установим измененный параметр в очередь на отправку/сохранение в ESP\n";
-  out += "                     * @type {number}\n";
-  out += "                     */\n";
-  out += "                    timeouts[name] = setTimeout(() => {\n";
-  out += "                        window.changeReaction = false;\n";
-  out += "                        outData[name] = that.val();\n";
-  out += "                        $.ajax({\n";
-  out += "                            url:'setconfig',\n";
-  out += "                            data: outData,\n";
-  out += "                            dataType: 'json',\n";
-  out += "                            success: (json) => {\n";
-  out += "                                if(json[name] = outData[name])\n";
-  out += "                                    window.changeReaction = true;\n";
-  out += "                                else\n";
-  out += "                                    alert('Не удалось сохранить настройки.');\n";
-  out += "                                setConfig(json);\n";
-  out += "                            },\n";
-  out += "                            error: (event) => alert(`Не удалось сохранить настройки.\nПроизошла ошибка \"${event.status} ${event.statusText}\".`)\n";
-  out += "                        });\n";
-  out += "                    }, 500);\n";
-  out += "                });\n";
-  out += "                setConfig(config);\n";
-  out += "                /** установим актуальные параметры из ESP */\n";
-  out += "                function setConfig(config){\n";
-  out += "                  window.changeReaction = false;\n";
-  out += "                  for (let key in config){\n";
-  out += "                      let that = $(`[name=${key}]`);\n";
-  out += "                      that.val(config[key]);\n";
-  out += "                      that.trigger('change');\n";
-  out += "                  }\n";
-  out += "                  /**\n";
-  out += "                   * разрешаем вносить изменеия в конфигу\n";
-  out += "                   * @type {boolean}\n";
-  out += "                   */\n";
-  out += "                  window.changeReaction = true;\n";
-  out += "                }\n";
-  out += "            });\n";
-  out += "        }\n";
-  out += "    </script>\n";
+  out += "<script type='text/javascript'>$(()=>{syncConfig('/getconfig','/setconfig');});</script>";
 
   responseHtml(out);
 }
