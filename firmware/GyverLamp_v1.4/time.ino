@@ -93,6 +93,7 @@ void resolveNtpServerAddress(bool &ntpServerAddressResolved)              // ф�
   {
     return;
   }
+
   WiFi.hostByName(NTP_ADDRESS, ntpServerIp, RESOLVE_TIMEOUT);
   if (ntpServerIp[0] <= 0)
   {
@@ -102,6 +103,7 @@ void resolveNtpServerAddress(bool &ntpServerAddressResolved)              // ф�
       Serial.println("Подключение к интернету отсутствует");
     }
     #endif
+
     ntpServerAddressResolved = false;
   }
   else

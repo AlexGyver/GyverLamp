@@ -40,7 +40,7 @@
 // --- ВРЕМЯ ---------------------------
 #define USE_NTP                                             // закомментировать или удалить эту строку, если нужно, чтобы устройство не лезло в интернет
 #define GMT              (3)                                // часовой пояс (москва 3)
-#define NTP_ADDRESS      ("europe.pool.ntp.org")            // сервер времени
+#define NTP_ADDRESS      ("ntp2.colocall.net")              // сервер времени
 #define NTP_INTERVAL     (30UL * 60UL * 1000UL)             // интервал синхронизации времени (30 минут)
 
 // --- РАССВЕТ -------------------------
@@ -77,12 +77,12 @@
 #endif
 
 // --- ESP (WiFi клиент) ---------------
-uint8_t STA_STATIC_IP[] ={};                                // статический IP адрес: {} - IP адрес определяется роутером; {192, 168, 1, 66} - IP адрес задан явно (если DHCP на роутере не решит иначе); должен быть из того же диапазона адресов, что разадёт роутер
+uint8_t STA_STATIC_IP[] = {};                               // статический IP адрес: {} - IP адрес определяется роутером; {192, 168, 1, 66} - IP адрес задан явно (если DHCP на роутере не решит иначе); должен быть из того же диапазона адресов, что разадёт роутер
                                                             // SSID WiFi сети и пароль будут запрошены WiFi Manager'ом в режиме WiFi точки доступа, нет способа захардкодить их в прошивке
 
 // --- AP (WiFi точка доступа) ---
-#define AP_NAME          ("GyverLamp")                      // имя WiFi точки доступа, используется как при запросе SSID и пароля WiFi сети роутера, так и при работе в режиме ESP_MODE = 0
-#define AP_PASS          ("12345678")                       // пароль WiFi точки доступа
+#define AP_NAME          ("LedLamp")                        // имя WiFi точки доступа, используется как при запросе SSID и пароля WiFi сети роутера, так и при работе в режиме ESP_MODE = 0
+#define AP_PASS          ("31415926")                       // пароль WiFi точки доступа
 uint8_t AP_STATIC_IP[] = {192, 168, 4, 1};                  // статический IP точки доступа (лучше не менять)
 
 // ============= ДЛЯ РАЗРАБОТЧИКОВ =====
@@ -186,7 +186,7 @@ void setup()
   touch.setStepTimeout(100);
   touch.setClickTimeout(500);
   buttonTick();
-  if(touch.state())                                         // сброс сохранённых SSID и пароля при старте с зажатой кнопкой
+  if (touch.state())                                        // сброс сохранённых SSID и пароля при старте с зажатой кнопкой
   {
     wifiManager.resetSettings();
 
@@ -205,8 +205,10 @@ void setup()
 
   // WI-FI
   wifiManager.setDebugOutput(WIFIMAN_DEBUG);                // вывод отладочных сообщений
+  //wifiManager.setMinimumSignalQuality();                  // установка минимально приемлемого уровня сигнала WiFi сетей (8% по умолчанию)
   if (ESP_MODE == 0)                                        // режим WiFi точки доступа
   {
+    // wifiManager.setConfigPortalBlocking(false);
     WiFi.softAPConfig(                                      // wifiManager.startConfigPortal использовать нельзя, т.к. он блокирует вычислительный процесс внутри себя, а затем перезагружает ESP, т.е. предназначен только для ввода SSID и пароля
       IPAddress(AP_STATIC_IP[0], AP_STATIC_IP[1], AP_STATIC_IP[2], AP_STATIC_IP[3]),        // IP адрес WiFi точки доступа
       IPAddress(AP_STATIC_IP[0], AP_STATIC_IP[1], AP_STATIC_IP[2], 1),                      // первый доступный IP адрес сети
@@ -232,7 +234,7 @@ void setup()
     {
       Serial.println("WiFi сеть не определена, запуск WiFi точки доступа для настройки параметров подключения к WiFi сети...");
     }
-    
+
     if (STA_STATIC_IP)
     {
       wifiManager.setSTAStaticIPConfig(
@@ -313,7 +315,7 @@ void setup()
   #ifdef USE_NTP
   timeClient.begin();
   #endif
-  
+
   memset(matrixValue, 0, sizeof(matrixValue));
 
   randomSeed(micros());

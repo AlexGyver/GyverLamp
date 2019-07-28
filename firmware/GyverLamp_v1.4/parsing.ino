@@ -41,18 +41,11 @@ void parseUDP()
 
     else if (inputBuffer.startsWith("BRI"))
     {
-      #ifdef GENERAL_DEBUG
-      Serial.printf("New brightness value: %d\n", inputBuffer.substring(3).toInt());
-      #endif
-      
       modes[currentMode].brightness = constrain(inputBuffer.substring(3).toInt(), 1, 255);
       FastLED.setBrightness(modes[currentMode].brightness);
       settChanged = true;
       eepromTimer = millis();
-
-      #ifdef GENERAL_DEBUG
-      Serial.printf("modes[currentMode].brightness: %d\n", modes[currentMode].brightness);
-      #endif
+      sendCurrent();
     }
 
     else if (inputBuffer.startsWith("SPD"))
@@ -61,6 +54,7 @@ void parseUDP()
       loadingFlag = true;
       settChanged = true;
       eepromTimer = millis();
+      sendCurrent();
     }
 
     else if (inputBuffer.startsWith("SCA"))
@@ -69,6 +63,7 @@ void parseUDP()
       loadingFlag = true;
       settChanged = true;
       eepromTimer = millis();
+      sendCurrent();
     }
 
     else if (inputBuffer.startsWith("P_ON"))
@@ -150,6 +145,10 @@ void sendCurrent()
   inputBuffer += String(modes[currentMode].scale);
   inputBuffer += " ";
   inputBuffer += String(ONflag);
+
+  #ifdef GENERAL_DEBUG
+  Serial.println(inputBuffer);
+  #endif
 }
 
 void sendAlarms()
