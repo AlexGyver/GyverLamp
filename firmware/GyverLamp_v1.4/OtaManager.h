@@ -32,7 +32,7 @@ class OtaManager
   public:
     static OtaPhase OtaFlag;
 
-    void RequestOtaUpdate()                                 // пользователь однократно запросил обновление по воздуху
+    bool RequestOtaUpdate()                                 // пользователь однократно запросил обновление по воздуху; возвращает true, когда переходит в режим обновления - startOtaUpdate()
     {
       if (ESP_MODE != 1)
       {
@@ -40,7 +40,7 @@ class OtaManager
         Serial.printf("Запрос обновления по воздуху поддерживается только в режиме ESP_MODE = 1\n");
         #endif
 
-        return;
+        return false;
       }
 
       if (OtaFlag == OtaPhase::None)
@@ -52,7 +52,7 @@ class OtaManager
         Serial.printf("Получено первое подтверждение обновления по воздуху\nОжидание второго подтверждения\n");
         #endif
 
-        return;
+        return false;
       }
 
       if (OtaFlag == OtaPhase::GotFirstConfirm)
@@ -64,8 +64,10 @@ class OtaManager
         #endif
 
         startOtaUpdate();
-        return;
+        return true;
       }
+
+      return false;
     }
 
     void HandleOtaUpdate()

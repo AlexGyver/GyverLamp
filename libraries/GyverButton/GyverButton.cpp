@@ -106,13 +106,6 @@ boolean GButton::isTriple() {
 		return true;
 	} else return false;
 }
-boolean GButton::isQuadruple() {
-	if (flags.tickMode) GButton::tick();
-	if (flags.counter_flag && last_counter == 4) {
-		flags.counter_flag = false;
-		return true;
-	} else return false;
-}
 boolean GButton::hasClicks() {
 	if (flags.tickMode) GButton::tick();
 	if (flags.counter_flag) {

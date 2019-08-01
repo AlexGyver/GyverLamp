@@ -329,6 +329,61 @@ void lightersRoutine()
   }
 }
 
+
+// ------------- LightBalls (светлячки со шлейфом) -------------
+const uint8_t BorderWidth = 2;
+
+void lightBalls()
+{
+  // Apply some blurring to whatever's already on the matrix
+  // Note that we never actually clear the matrix, we just constantly
+  // blur it repeatedly.  Since the blurring is 'lossy', there's
+  // an automatic trend toward black -- by design.
+  uint8_t blurAmount = dim8_raw(beatsin8(3,64,100));
+  blur2d(leds, WIDTH, HEIGHT, blurAmount);
+
+  // Use two out-of-sync sine waves
+  uint8_t  i = beatsin8(  91, BorderWidth, WIDTH-BorderWidth);
+  uint8_t  j = beatsin8( 109, BorderWidth, WIDTH-BorderWidth);
+  uint8_t  k = beatsin8(  73, BorderWidth, WIDTH-BorderWidth);
+  uint8_t  m = beatsin8( 123, BorderWidth, WIDTH-BorderWidth);
+
+  // The color of each point shifts over time, each at a different speed.
+  uint16_t ms = millis();
+  leds[XY( i, j)] += CHSV( ms / 29, 200, 255);
+  leds[XY( j, k)] += CHSV( ms / 41, 200, 255);
+  leds[XY( k, m)] += CHSV( ms / 73, 200, 255);
+  leds[XY( m, i)] += CHSV( ms / 97, 200, 255);
+
+}
+// Trivial XY function for the SmartMatrix; use a different XY
+// function for different matrix grids. See XYMatrix example for code.
+uint16_t XY(uint8_t x, uint8_t y)
+{
+  uint16_t i;
+  if (y & 0x01)
+  {
+    // Odd rows run backwards
+    uint8_t reverseX = (WIDTH - 1) - x;
+    i = (y * WIDTH) + reverseX;
+  }
+  else
+  {
+    // Even rows run forwards
+    i = (y * WIDTH) + x;
+  }
+  return i;
+}
+
+// ------------- белый свет -------------
+void whiteColor()
+{
+  for (int i = 0; i < NUM_LEDS; i++)
+  {
+    leds[i] = CHSV(0, 0, 255);
+  }
+}
+
 /*
 void lightersRoutine()
 {

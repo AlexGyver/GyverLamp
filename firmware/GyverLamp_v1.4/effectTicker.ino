@@ -45,6 +45,10 @@ void effectsTick()
           break;
         case 17: lightersRoutine();
           break;
+        case 18: lightBalls();
+          break;
+        case 19: whiteColor();
+          break;
       }
       FastLED.show();
     }

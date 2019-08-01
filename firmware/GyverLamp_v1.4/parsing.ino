@@ -4,6 +4,8 @@ void parseUDP()
 
   if (packetSize)
   {
+    Serial.print("income");
+
     int32_t n = Udp.read(packetBuffer, UDP_TX_PACKET_MAX_SIZE);
     packetBuffer[n] = 0;
     inputBuffer = packetBuffer;
@@ -118,8 +120,39 @@ void parseUDP()
       saveDawnMmode();
     }
 
+    else if (inputBuffer.startsWith("DISCOVER"))            // обнаружение приложением модуля esp в локальной сети
+    {
+      if (ESP_MODE == 1)                                    // работает только в режиме WiFi клиента
+      {
+        inputBuffer = "IP";
+        inputBuffer += " ";
+        inputBuffer += String(WiFi.localIP()[0]) + "." +
+                       String(WiFi.localIP()[1]) + "." +
+                       String(WiFi.localIP()[2]) + "." +
+                       String(WiFi.localIP()[3]);
+        inputBuffer += ":";
+        inputBuffer += String(ESP_UDP_PORT);
+      }
+    }
+
+    else
+    {
+      inputBuffer = "";
+    }
+
+    if (inputBuffer.length() <= 0)
+    {
+      return;
+    }
+
+    if (Udp.remoteIP() == WiFi.localIP())                   // не реагировать на свои же пакеты
+    {
+      return;
+    }
+
     char reply[inputBuffer.length() + 1];
     inputBuffer.toCharArray(reply, inputBuffer.length() + 1);
+    inputBuffer.remove(0);                                  // очистка буфера, читобы не он не интерпретировался, как следующий udp пакет
     Udp.beginPacket(Udp.remoteIP(), Udp.remotePort());
     Udp.write(reply);
     Udp.endPacket();
@@ -145,6 +178,14 @@ void sendCurrent()
   inputBuffer += String(modes[currentMode].scale);
   inputBuffer += " ";
   inputBuffer += String(ONflag);
+  inputBuffer += " ";
+  inputBuffer += String(ESP_MODE);
+  inputBuffer += " ";
+  #ifdef USE_NTP
+  inputBuffer += "1";
+  #else
+  inputBuffer += "0";
+  #endif
 
   #ifdef GENERAL_DEBUG
   Serial.println(inputBuffer);

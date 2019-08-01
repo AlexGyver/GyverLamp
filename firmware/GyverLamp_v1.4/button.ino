@@ -34,7 +34,7 @@ void buttonTick()
 
   if (ONflag && touch.isTriple())
   {
-    if (--currentMode < 0) currentMode = 0;
+    if (--currentMode < 0) currentMode = MODE_AMOUNT - 1;
     FastLED.setBrightness(modes[currentMode].brightness);
     loadingFlag = true;
     settChanged = true;
@@ -43,10 +43,15 @@ void buttonTick()
     delay(1);
   }
 
-  if (ONflag && touch.isQuadruple())
+  if (ONflag && touch.hasClicks() && touch.getClicks() >= 4)
   {
     #ifdef OTA
-    otaManager.RequestOtaUpdate();
+    if (otaManager.RequestOtaUpdate())
+    {
+      currentMode = 16;                                     // принудительное включение режима "Матрица" для индикации перехода в режим обновления по воздуху
+      FastLED.clear();
+      delay(1);
+    }
     #endif
   }
 
