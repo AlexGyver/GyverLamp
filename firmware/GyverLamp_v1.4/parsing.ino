@@ -186,6 +186,12 @@ void sendCurrent()
   #else
   inputBuffer += "0";
   #endif
+  inputBuffer += " ";
+  #ifdef USE_NTP
+  inputBuffer += timeClient.getFormattedTime();
+  #else
+  inputBuffer += String(millis());
+  #endif
 
   #ifdef GENERAL_DEBUG
   Serial.println(inputBuffer);
