@@ -4,8 +4,6 @@ void parseUDP()
 
   if (packetSize)
   {
-    Serial.print("income");
-
     int32_t n = Udp.read(packetBuffer, UDP_TX_PACKET_MAX_SIZE);
     packetBuffer[n] = 0;
     inputBuffer = packetBuffer;
@@ -89,12 +87,12 @@ void parseUDP()
       if (inputBuffer.indexOf("ON") != -1)
       {
         alarm[alarmNum].state = true;
-        inputBuffer = "alm #" + String(alarmNum + 1) + " ON";
+        sendAlarms();
       }
       else if (inputBuffer.indexOf("OFF") != -1)
       {
         alarm[alarmNum].state = false;
-        inputBuffer = "alm #" + String(alarmNum + 1) + " OFF";
+        sendAlarms();
       }
       else
       {
@@ -102,9 +100,7 @@ void parseUDP()
         alarm[alarmNum].time = almTime;
         byte hour = floor(almTime / 60);
         byte minute = almTime - hour * 60;
-        inputBuffer = "alm #" + String(alarmNum + 1) +
-                      " " + String(hour) +
-                      ":" + String(minute);
+        sendAlarms();
       }
       saveAlarm(alarmNum);
     }
@@ -118,6 +114,7 @@ void parseUDP()
     {
       dawnMode = inputBuffer.substring(4).toInt() - 1;
       saveDawnMmode();
+      sendAlarms();
     }
 
     else if (inputBuffer.startsWith("DISCOVER"))            // обнаружение приложением модуля esp в локальной сети

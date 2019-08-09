@@ -213,7 +213,7 @@ class OtaManager
       Serial.printf("Для обновления в Arduino IDE выберите пункт меню Инструменты - Порт - '%s at ", espHostName);
       Serial.print(WiFi.localIP());
       Serial.println("'");
-      Serial.printf("Затем нажмите кнопку 'Загрузка' в течение %u секунд и по запросу введите пароль '%ы'\n", ESP_CONF_TIMEOUT, AP_PASS);
+      Serial.printf("Затем нажмите кнопку 'Загрузка' в течение %u секунд и по запросу введите пароль '%s'\n", ESP_CONF_TIMEOUT, AP_PASS);
       Serial.println("Устройство с Arduino IDE должно быть в одной локальной сети с модулем ESP!");
       #endif
     }
