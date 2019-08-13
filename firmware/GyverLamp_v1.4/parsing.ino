@@ -132,6 +132,20 @@ void parseUDP()
       }
     }
 
+    else if (inputBuffer.startsWith("TMR_GET"))
+    {
+      sendTimer();
+    }
+
+    else if (inputBuffer.startsWith("TMR_SET"))
+    {
+      TimerManager::TimerRunning = inputBuffer.substring(8, 9).toInt();
+      TimerManager::TimerOption = inputBuffer.substring(10, 11).toInt();
+      TimerManager::TimeToFire = millis() + (uint64_t)(inputBuffer.substring(12).toInt() * 1000);
+      TimerManager::TimerHasFired = false;
+      sendTimer();
+    }
+
     else
     {
       inputBuffer = "";
@@ -184,6 +198,8 @@ void sendCurrent()
   inputBuffer += "0";
   #endif
   inputBuffer += " ";
+  inputBuffer += String((uint8_t)TimerManager::TimerRunning);
+  inputBuffer += " ";
   #ifdef USE_NTP
   inputBuffer += timeClient.getFormattedTime();
   #else
@@ -207,4 +223,15 @@ void sendAlarms()
     inputBuffer += " ";
   }
   inputBuffer += (dawnMode + 1);
+}
+
+void sendTimer()
+{
+  inputBuffer = "TMR";
+  inputBuffer += " ";
+  inputBuffer += String((uint8_t)TimerManager::TimerRunning);
+  inputBuffer += " ";
+  inputBuffer += String(TimerManager::TimerOption);
+  inputBuffer += " ";
+  inputBuffer += String(TimerManager::TimerRunning ? (uint16_t)floor((TimerManager::TimeToFire - millis()) / 1000) : 0);
 }

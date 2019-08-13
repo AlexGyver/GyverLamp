@@ -57,10 +57,6 @@ void effectsTick()
 
 void changePower()
 {
-  #ifdef GENERAL_DEBUG
-  Serial.printf("changePower(); brightness: %d\n", modes[currentMode].brightness);
-  #endif
-
   if (ONflag)
   {
     effectsTick();
@@ -87,4 +83,7 @@ void changePower()
     delay(2);
     FastLED.show();
   }
+  TimerManager::TimerRunning = false;
+  TimerManager::TimerHasFired = false;
+  TimerManager::TimeToFire = 0ULL;
 }

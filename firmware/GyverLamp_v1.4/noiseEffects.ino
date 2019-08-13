@@ -28,7 +28,7 @@ uint8_t noise[WIDTH][WIDTH];
 uint8_t noise[HEIGHT][HEIGHT];
 #endif
 
-CRGBPalette16 currentPalette( PartyColors_p );
+CRGBPalette16 currentPalette(PartyColors_p);
 uint8_t colorLoop = 1;
 uint8_t ihue = 0;
 
