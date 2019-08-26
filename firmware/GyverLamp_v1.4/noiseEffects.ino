@@ -37,8 +37,8 @@ void madnessNoise()
   if (loadingFlag)
   {
     loadingFlag = false;
-    scale = modes[5].scale;
-    speed = modes[5].speed;
+    scale = modes[5].Scale;
+    speed = modes[5].Speed;
   }
   fillnoise8();
   for (uint8_t i = 0; i < WIDTH; i++)
@@ -58,8 +58,8 @@ void rainbowNoise()
   {
     loadingFlag = false;
     currentPalette = RainbowColors_p;
-    scale = modes[9].scale;
-    speed = modes[9].speed;
+    scale = modes[9].Scale;
+    speed = modes[9].Speed;
     colorLoop = 1;
   }
   fillNoiseLED();
@@ -71,8 +71,8 @@ void rainbowStripeNoise()
   {
     loadingFlag = false;
     currentPalette = RainbowStripeColors_p;
-    scale = modes[10].scale;
-    speed = modes[10].speed;
+    scale = modes[10].Scale;
+    speed = modes[10].Speed;
     colorLoop = 1;
   }
   fillNoiseLED();
@@ -90,8 +90,8 @@ void zebraNoise()
     currentPalette[4] = CRGB::White;
     currentPalette[8] = CRGB::White;
     currentPalette[12] = CRGB::White;
-    scale = modes[11].scale;
-    speed = modes[11].speed;
+    scale = modes[11].Scale;
+    speed = modes[11].Speed;
     colorLoop = 1;
   }
   fillNoiseLED();
@@ -103,8 +103,8 @@ void forestNoise()
   {
     loadingFlag = false;
     currentPalette = ForestColors_p;
-    scale = modes[12].scale;
-    speed = modes[12].speed;
+    scale = modes[12].Scale;
+    speed = modes[12].Speed;
     colorLoop = 0;
   }
   fillNoiseLED();
@@ -116,8 +116,8 @@ void oceanNoise()
   {
     loadingFlag = false;
     currentPalette = OceanColors_p;
-    scale = modes[13].scale;
-    speed = modes[13].speed;
+    scale = modes[13].Scale;
+    speed = modes[13].Speed;
     colorLoop = 0;
   }
 
@@ -130,8 +130,8 @@ void plasmaNoise()
   {
     loadingFlag = false;
     currentPalette = PartyColors_p;
-    scale = modes[8].scale;
-    speed = modes[8].speed;
+    scale = modes[8].Scale;
+    speed = modes[8].Speed;
     colorLoop = 1;
   }
   fillNoiseLED();
@@ -143,8 +143,8 @@ void cloudNoise()
   {
     loadingFlag = false;
     currentPalette = CloudColors_p;
-    scale = modes[6].scale;
-    speed = modes[6].speed;
+    scale = modes[6].Scale;
+    speed = modes[6].Speed;
     colorLoop = 0;
   }
   fillNoiseLED();
@@ -156,8 +156,8 @@ void lavaNoise()
   {
     loadingFlag = false;
     currentPalette = LavaColors_p;
-    scale = modes[7].scale;
-    speed = modes[7].speed;
+    scale = modes[7].Scale;
+    speed = modes[7].Speed;
     colorLoop = 0;
   }
   fillNoiseLED();

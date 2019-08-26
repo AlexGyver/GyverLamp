@@ -44,6 +44,9 @@
   - Добавлено взаимодействие с android приложением по управлению будильниками
   --- 14.08.2019
   - Добавлена функция таймера отключения
+  --- 26.08.2019
+  - Добавлен режим автоматического переключения избранных эффектов
+  - Реорганизован код, исправлены ошибки
 */
 
 // Ссылка для менеджера плат:
@@ -112,6 +115,7 @@ uint8_t AP_STATIC_IP[] = {192, 168, 4, 1};                  // статичес�
 #define FASTLED_ALLOW_INTERRUPTS      (0U)
 #define FASTLED_ESP8266_RAW_PIN_ORDER
 
+#include "Types.h"
 #include "timerMinim.h"
 #include <FastLED.h>
 #include <ESP8266WiFi.h>
@@ -130,6 +134,8 @@ uint8_t AP_STATIC_IP[] = {192, 168, 4, 1};                  // статичес�
 #include "OtaManager.h"
 #endif
 #include "TimerManager.h"
+#include "FavoritesManager.h"
+#include "EepromManager.h"
 
 // --- ИНИЦИАЛИЗАЦИЯ ОБЪЕКТОВ ----------
 CRGB leds[NUM_LEDS];
@@ -158,34 +164,25 @@ char packetBuffer[UDP_TX_PACKET_MAX_SIZE + 1];              // buffer to hold in
 String inputBuffer;
 static const uint8_t maxDim = max(WIDTH, HEIGHT);
 
-struct
-{
-  uint8_t brightness = 50;
-  uint8_t speed = 30;
-  uint8_t scale = 40;
-} modes[MODE_AMOUNT];
-
-struct
-{
-  boolean state = false;
-  int16_t time = 0;
-} alarm[7];
+ModeType modes[MODE_AMOUNT];
+AlarmType alarms[7];
 
 uint8_t dawnOffsets[] = {5, 10, 15, 20, 25, 30, 40, 50, 60};// опции для выпадающего списка параметра "время перед 'рассветом'" (будильник)
 uint8_t dawnMode;
-boolean dawnFlag = false;
+bool dawnFlag = false;
 long thisTime;
-boolean manualOff = false;
+bool manualOff = false;
 
 int8_t currentMode = 0;
-boolean loadingFlag = true;
-boolean ONflag = true;
+bool loadingFlag = true;
+bool ONflag = true;
 uint32_t eepromTimer;
-boolean settChanged = false;
+bool settChanged = false;
 
-// Конфетти, Огонь, Радуга верт., Радуга гориз., Смена цвета,
+// Конфетти, Огонь, Радуга вертикальная, Радуга горизонтальная, Смена цвета,
 // Безумие 3D, Облака 3D, Лава 3D, Плазма 3D, Радуга 3D,
 // Павлин 3D, Зебра 3D, Лес 3D, Океан 3D,
+// Цвет, Снег, Матрица, Светлячки, Светлячки со шлейфом, Белый свет
 
 unsigned char matrixValue[8][16];
 
@@ -193,6 +190,12 @@ bool TimerManager::TimerRunning = false;
 bool TimerManager::TimerHasFired = false;
 uint8_t TimerManager::TimerOption = 1U;
 uint64_t TimerManager::TimeToFire = 0ULL;
+
+bool FavoritesManager::FavoritesRunning = false;
+uint16_t FavoritesManager::Interval = DEFAULT_FAVORITES_INTERVAL;
+uint16_t FavoritesManager::Dispersion = DEFAULT_FAVORITES_DISPERSION;
+uint8_t FavoritesManager::FavoriteModes[MODE_AMOUNT] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+uint32_t FavoritesManager::nextModeAt = 0UL;
 
 
 void setup()
@@ -286,47 +289,12 @@ void setup()
   Serial.printf("Порт UDP сервера: %u\n", localPort);
   Udp.begin(localPort);
 
-  // EEPROM
-  EEPROM.begin(202);
-  delay(50);
-  if (EEPROM.read(198) != 20)                               // первый запуск
-  {
-    EEPROM.write(198, 20);
-    EEPROM.commit();
+  EepromManager::InitEepromSettings(                        // инициализация EEPROM; запись начального состояния настроек, если их там ещё нет; инициализация настроек лампы значениями из EEPROM
+    modes, alarms, &dawnMode, &currentMode,
+    &(FavoritesManager::ReadFavoritesFromEeprom),
+    &(FavoritesManager::SaveFavoritesToEeprom));
 
-    for (uint8_t i = 0; i < MODE_AMOUNT; i++)
-    {
-      EEPROM.put(3 * i + 40, modes[i]);
-      EEPROM.commit();
-    }
-
-    for (uint8_t i = 0; i < 7; i++)
-    {
-      EEPROM.write(5 * i, alarm[i].state);                  // рассвет
-      eeWriteInt(5 * i + 1, alarm[i].time);
-      EEPROM.commit();
-    }
-
-    EEPROM.write(199, 0);                                   // рассвет
-    EEPROM.write(200, 0);                                   // режим
-    EEPROM.commit();
-  }
-
-  for (uint8_t i = 0; i < MODE_AMOUNT; i++)
-  {
-    EEPROM.get(3 * i + 40, modes[i]);
-  }
-
-  for (uint8_t i = 0; i < 7; i++)
-  {
-    alarm[i].state = EEPROM.read(5 * i);
-    alarm[i].time = eeGetInt(5 * i + 1);
-  }
-
-  dawnMode = EEPROM.read(199);
-  currentMode = (int8_t)EEPROM.read(200);
-
-  sendCurrent();                                            // отправляем настройки
+  sendCurrent();                                            // отправляем настройки (куда?)
   char reply[inputBuffer.length() + 1];
   inputBuffer.toCharArray(reply, inputBuffer.length() + 1);
   Udp.beginPacket(Udp.remoteIP(), Udp.remotePort());
@@ -347,7 +315,7 @@ void loop()
 {
   parseUDP();
   effectsTick();
-  eepromTick();
+  EepromManager::HandleEepromTick(&settChanged, &eepromTimer, &currentMode, modes, &(FavoritesManager::SaveFavoritesToEeprom));
   #ifdef USE_NTP
   timeTick();
   #endif
@@ -358,29 +326,19 @@ void loop()
   otaManager.HandleOtaUpdate();                             // ожидание и обработка команды на обновление прошивки по воздуху
   #endif
   TimerManager::HandleTimer(&ONflag, &changePower);         // обработка событий таймера отключения лампы
+  if (FavoritesManager::HandleFavorites(                    // обработка режима избранных эффектов
+      &ONflag,
+      &currentMode,
+      &loadingFlag
+      #ifdef USE_NTP
+      , &dawnFlag
+      #endif
+      ))
+  {
+    FastLED.setBrightness(modes[currentMode].Brightness);
+    FastLED.clear();
+    delay(1);
+  }
   ESP.wdtFeed();                                            // пнуть собаку
-  yield();                                                  // обработать все "служебные" задачи: WiFi подключение и т.д.
-}
-
-
-void eeWriteInt(int16_t pos, int16_t val)
-{
-  uint8_t* p = (uint8_t*) &val;
-  EEPROM.write(pos, *p);
-  EEPROM.write(pos + 1, *(p + 1));
-  EEPROM.write(pos + 2, *(p + 2));
-  EEPROM.write(pos + 3, *(p + 3));
-  EEPROM.commit();
-}
-
-
-int16_t eeGetInt(int16_t pos)
-{
-  int16_t val;
-  uint8_t* p = (uint8_t*) &val;
-  *p        = EEPROM.read(pos);
-  *(p + 1)  = EEPROM.read(pos + 1);
-  *(p + 2)  = EEPROM.read(pos + 2);
-  *(p + 3)  = EEPROM.read(pos + 3);
-  return val;
+  yield();                                                  // обработать все "служебные" задачи: wdt, WiFi подключение и т.д. (?)
 }

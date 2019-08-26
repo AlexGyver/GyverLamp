@@ -52,14 +52,14 @@ void timeTick()
       thisTime = timeClient.getHours() * 60 + timeClient.getMinutes();
 
       // проверка рассвета
-      if (alarm[thisDay].state &&                                         // день будильника
-          thisTime >= (alarm[thisDay].time - dawnOffsets[dawnMode]) &&    // позже начала
-          thisTime < (alarm[thisDay].time + DAWN_TIMEOUT))                // раньше конца + минута
+      if (alarms[thisDay].State &&                                        // день будильника
+          thisTime >= (alarms[thisDay].Time - dawnOffsets[dawnMode]) &&   // позже начала
+          thisTime < (alarms[thisDay].Time + DAWN_TIMEOUT))               // раньше конца + минута
       {
         if (!manualOff)                                                   // будильник не был выключен вручную (из приложения или кнопкой)
         {
           // величина рассвета 0-255
-          int32_t dawnPosition = 255 * ((float)(thisTime - (alarm[thisDay].time - dawnOffsets[dawnMode])) / dawnOffsets[dawnMode]);
+          int32_t dawnPosition = 255 * ((float)(thisTime - (alarms[thisDay].Time - dawnOffsets[dawnMode])) / dawnOffsets[dawnMode]);
           dawnPosition = constrain(dawnPosition, 0, 255);
           CHSV dawnColor = CHSV(map(dawnPosition, 0, 255, 10, 35),
                                 map(dawnPosition, 0, 255, 255, 170),
@@ -118,4 +118,4 @@ void resolveNtpServerAddress(bool &ntpServerAddressResolved)              // ф�
     ntpServerAddressResolved = true;
   }
 }
-#endif USE_NTP
+#endif

@@ -1,3 +1,6 @@
+#pragma once
+
+
 class TimerManager
 {
   public:
@@ -7,7 +10,7 @@ class TimerManager
     static uint64_t TimeToFire;                             // время, в которое должен сработать таймер (millis)
 
     static void HandleTimer(                                // функция, обрабатывающая срабатывание таймера, гасит матрицу
-      bool *ONflag,
+      bool* ONflag,
       void (*changePower)())
     {
       if (!TimerManager::TimerHasFired &&

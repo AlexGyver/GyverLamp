@@ -3,7 +3,7 @@
 // ------------- конфетти --------------
 void sparklesRoutine()
 {
-  for (uint8_t i = 0; i < modes[0].scale; i++)
+  for (uint8_t i = 0; i < modes[0].Scale; i++)
   {
     uint8_t x = random(0, WIDTH);
     uint8_t y = random(0, HEIGHT);
@@ -144,7 +144,7 @@ void drawFrame(int32_t pcnt)
           - pgm_read_byte(&(valueMask[y][newX]));
 
         CRGB color = CHSV(
-          modes[1].scale * 2.5 + pgm_read_byte(&(hueMask[y][newX])),                 // H
+          modes[1].Scale * 2.5 + pgm_read_byte(&(hueMask[y][newX])),                 // H
           255,                                                                       // S
           (uint8_t)max(0, nextv)                                                     // V
         );
@@ -172,7 +172,7 @@ void drawFrame(int32_t pcnt)
     uint8_t newX = x;
     if (x > 15) newX = x - 15;
     CRGB color = CHSV(
-      modes[1].scale * 2.5 + pgm_read_byte(&(hueMask[0][newX])),                     // H
+      modes[1].Scale * 2.5 + pgm_read_byte(&(hueMask[0][newX])),                     // H
       255,                                                                           // S
       (uint8_t)(((100.0 - pcnt) * matrixValue[0][newX] + pcnt * line[newX]) / 100.0) // V
     );
@@ -187,7 +187,7 @@ void rainbowVertical()
   hue += 2;
   for (uint8_t j = 0; j < HEIGHT; j++)
   {
-    CHSV thisColor = CHSV((uint8_t)(hue + j * modes[2].scale), 255, 255);
+    CHSV thisColor = CHSV((uint8_t)(hue + j * modes[2].Scale), 255, 255);
     for (uint8_t i = 0; i < WIDTH; i++)
       drawPixelXY(i, j, thisColor);
   }
@@ -198,7 +198,7 @@ void rainbowHorizontal()
   hue += 2;
   for (uint8_t i = 0; i < WIDTH; i++)
   {
-    CHSV thisColor = CHSV((uint8_t)(hue + i * modes[3].scale), 255, 255);
+    CHSV thisColor = CHSV((uint8_t)(hue + i * modes[3].Scale), 255, 255);
     for (uint8_t j = 0; j < HEIGHT; j++)
       drawPixelXY(i, j, thisColor);                         //leds[getPixelNumber(i, j)] = thisColor;
   }
@@ -207,7 +207,7 @@ void rainbowHorizontal()
 // ------------- цвета -----------------
 void colorsRoutine()
 {
-  hue += modes[4].scale;
+  hue += modes[4].Scale;
   for (int32_t i = 0; i < NUM_LEDS; i++)
   {
     leds[i] = CHSV(hue, 255, 255);
@@ -219,7 +219,7 @@ void colorRoutine()
 {
   for (int32_t i = 0; i < NUM_LEDS; i++)
   {
-    leds[i] = CHSV(modes[14].scale * 2.5, 255, 255);
+    leds[i] = CHSV(modes[14].Scale * 2.5, 255, 255);
   }
 }
 
@@ -239,7 +239,7 @@ void snowRoutine()
   {
     // заполняем случайно верхнюю строку
     // а также не даём двум блокам по вертикали вместе быть
-    if (getPixColorXY(x, HEIGHT - 2) == 0 && (random(0, 100 - modes[15].scale) == 0))
+    if (getPixColorXY(x, HEIGHT - 2) == 0 && (random(0, 100 - modes[15].Scale) == 0))
       drawPixelXY(x, HEIGHT - 1, 0xE0FFFF - 0x101010 * random(0, 4));
     else
       drawPixelXY(x, HEIGHT - 1, 0x000000);
@@ -254,7 +254,7 @@ void matrixRoutine()
     // заполняем случайно верхнюю строку
     uint32_t thisColor = getPixColorXY(x, HEIGHT - 1);
     if (thisColor == 0)
-      drawPixelXY(x, HEIGHT - 1, 0x00FF00 * (random(0, 100 - modes[16].scale) == 0));
+      drawPixelXY(x, HEIGHT - 1, 0x00FF00 * (random(0, 100 - modes[16].Scale) == 0));
     else if (thisColor < 0x002000)
       drawPixelXY(x, HEIGHT - 1, 0);
     else
@@ -299,7 +299,7 @@ void lightersRoutine()
   }
   FastLED.clear();
   if (++loopCounter > 20) loopCounter = 0;
-  for (uint8_t i = 0; i < modes[17].scale; i++)
+  for (uint8_t i = 0; i < modes[17].Scale; i++)
   {
     if (loopCounter == 0)                                   // меняем скорость каждые 255 отрисовок
     {

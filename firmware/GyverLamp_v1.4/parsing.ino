@@ -30,19 +30,19 @@ void parseUDP()
 
     else if (inputBuffer.startsWith("EFF"))
     {
-      saveEEPROM();
+      EepromManager::SaveModesSettings(&currentMode, modes);
       currentMode = (byte)inputBuffer.substring(3).toInt();
       loadingFlag = true;
       FastLED.clear();
       delay(1);
       sendCurrent();
-      FastLED.setBrightness(modes[currentMode].brightness);
+      FastLED.setBrightness(modes[currentMode].Brightness);
     }
 
     else if (inputBuffer.startsWith("BRI"))
     {
-      modes[currentMode].brightness = constrain(inputBuffer.substring(3).toInt(), 1, 255);
-      FastLED.setBrightness(modes[currentMode].brightness);
+      modes[currentMode].Brightness = constrain(inputBuffer.substring(3).toInt(), 1, 255);
+      FastLED.setBrightness(modes[currentMode].Brightness);
       settChanged = true;
       eepromTimer = millis();
       sendCurrent();
@@ -50,7 +50,7 @@ void parseUDP()
 
     else if (inputBuffer.startsWith("SPD"))
     {
-      modes[currentMode].speed = inputBuffer.substring(3).toInt();
+      modes[currentMode].Speed = inputBuffer.substring(3).toInt();
       loadingFlag = true;
       settChanged = true;
       eepromTimer = millis();
@@ -59,7 +59,7 @@ void parseUDP()
 
     else if (inputBuffer.startsWith("SCA"))
     {
-      modes[currentMode].scale = inputBuffer.substring(3).toInt();
+      modes[currentMode].Scale = inputBuffer.substring(3).toInt();
       loadingFlag = true;
       settChanged = true;
       eepromTimer = millis();
@@ -82,27 +82,27 @@ void parseUDP()
 
     else if (inputBuffer.startsWith("ALM_SET"))
     {
-      byte alarmNum = (char)inputBuffer[7] - '0';
+      uint8_t alarmNum = (char)inputBuffer[7] - '0';
       alarmNum -= 1;
       if (inputBuffer.indexOf("ON") != -1)
       {
-        alarm[alarmNum].state = true;
+        alarms[alarmNum].State = true;
         sendAlarms();
       }
       else if (inputBuffer.indexOf("OFF") != -1)
       {
-        alarm[alarmNum].state = false;
+        alarms[alarmNum].State = false;
         sendAlarms();
       }
       else
       {
-        int32_t almTime = inputBuffer.substring(8).toInt();
-        alarm[alarmNum].time = almTime;
-        byte hour = floor(almTime / 60);
-        byte minute = almTime - hour * 60;
+        int32_t alarmTime = inputBuffer.substring(8).toInt();
+        alarms[alarmNum].Time = alarmTime;
+        uint8_t hour = floor(alarmTime / 60);
+        uint8_t minute = alarmTime - hour * 60;
         sendAlarms();
       }
-      saveAlarm(alarmNum);
+      EepromManager::SaveAlarmsSettings(&alarmNum, alarms);
     }
 
     else if (inputBuffer.startsWith("ALM_GET"))
@@ -113,7 +113,7 @@ void parseUDP()
     else if (inputBuffer.startsWith("DAWN")) 
     {
       dawnMode = inputBuffer.substring(4).toInt() - 1;
-      saveDawnMmode();
+      EepromManager::SaveDawnMode(&dawnMode);
       sendAlarms();
     }
 
@@ -144,6 +144,20 @@ void parseUDP()
       TimerManager::TimeToFire = millis() + (uint64_t)(inputBuffer.substring(12).toInt() * 1000);
       TimerManager::TimerHasFired = false;
       sendTimer();
+    }
+
+    else if (inputBuffer.startsWith("FAV_GET"))
+    {
+      sendFavorites();
+    }
+
+    else if (inputBuffer.startsWith("FAV_SET"))
+    {
+      FavoritesManager::ConfigureFavorites(inputBuffer.c_str());
+      //FavoritesManager::SetStatus(inputBuffer);
+      sendFavorites();
+      settChanged = true;
+      eepromTimer = millis();
     }
 
     else
@@ -182,11 +196,11 @@ void sendCurrent()
   inputBuffer += " ";
   inputBuffer += String(currentMode);
   inputBuffer += " ";
-  inputBuffer += String(modes[currentMode].brightness);
+  inputBuffer += String(modes[currentMode].Brightness);
   inputBuffer += " ";
-  inputBuffer += String(modes[currentMode].speed);
+  inputBuffer += String(modes[currentMode].Speed);
   inputBuffer += " ";
-  inputBuffer += String(modes[currentMode].scale);
+  inputBuffer += String(modes[currentMode].Scale);
   inputBuffer += " ";
   inputBuffer += String(ONflag);
   inputBuffer += " ";
@@ -205,21 +219,19 @@ void sendCurrent()
   #else
   inputBuffer += String(millis());
   #endif
-
-  #ifdef GENERAL_DEBUG
-  Serial.println(inputBuffer);
-  #endif
 }
 
 void sendAlarms()
 {
   inputBuffer = "ALMS ";
-  for (byte i = 0; i < 7; i++) {
-    inputBuffer += String(alarm[i].state);
+  for (byte i = 0; i < 7; i++)
+  {
+    inputBuffer += String(alarms[i].State);
     inputBuffer += " ";
   }
-  for (byte i = 0; i < 7; i++) {
-    inputBuffer += String(alarm[i].time);
+  for (byte i = 0; i < 7; i++)
+  {
+    inputBuffer += String(alarms[i].Time);
     inputBuffer += " ";
   }
   inputBuffer += (dawnMode + 1);
@@ -234,4 +246,20 @@ void sendTimer()
   inputBuffer += String(TimerManager::TimerOption);
   inputBuffer += " ";
   inputBuffer += String(TimerManager::TimerRunning ? (uint16_t)floor((TimerManager::TimeToFire - millis()) / 1000) : 0);
+}
+
+void sendFavorites()
+{
+  inputBuffer = "FAV";
+  inputBuffer += " ";
+  inputBuffer += String((uint8_t)FavoritesManager::FavoritesRunning);
+  inputBuffer += " ";
+  inputBuffer += String((uint16_t)FavoritesManager::Interval);
+  inputBuffer += " ";
+  inputBuffer += String((uint16_t)FavoritesManager::Dispersion);
+  for (uint8_t i = 0; i < MODE_AMOUNT; i++)
+  {
+    inputBuffer += " ";
+    inputBuffer += String((uint8_t)FavoritesManager::FavoriteModes[i]);
+  }
 }
