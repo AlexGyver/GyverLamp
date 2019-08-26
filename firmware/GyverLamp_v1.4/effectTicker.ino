@@ -64,7 +64,10 @@ void changePower()
     delay(2);
     FastLED.show();
   }
+  
   TimerManager::TimerRunning = false;
   TimerManager::TimerHasFired = false;
   TimerManager::TimeToFire = 0ULL;
+
+  FavoritesManager::FavoritesRunning = false;
 }
