@@ -160,6 +160,18 @@ void parseUDP()
       eepromTimer = millis();
     }
 
+    else if (inputBuffer.startsWith("OTA"))
+    {
+      #ifdef OTA
+      otaManager.RequestOtaUpdate();
+      delay(50);
+      otaManager.RequestOtaUpdate();
+      currentMode = 16;                                     // принудительное включение режима "Матрица" для индикации перехода в режим обновления по воздуху
+      FastLED.clear();
+      delay(1);
+      #endif
+    }
+
     else
     {
       inputBuffer = "";
