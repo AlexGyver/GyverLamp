@@ -69,5 +69,5 @@ void changePower()
   TimerManager::TimerHasFired = false;
   TimerManager::TimeToFire = 0ULL;
 
-  FavoritesManager::FavoritesRunning = false;
+  FavoritesManager::TurnFavoritesOff();
 }

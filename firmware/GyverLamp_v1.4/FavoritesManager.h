@@ -46,6 +46,10 @@ class FavoritesManager
     static void ConfigureFavorites(const char* statusText)  // принимает statusText, парсит его и инициализирует свойства класса значениями из statusText'а
     {
       FavoritesRunning = getFavoritesRunning(statusText);
+      if (!FavoritesRunning)
+      {
+        nextModeAt = 0;
+      }
       Interval = getInterval(statusText);
       Dispersion = getDispersion(statusText);
       for (uint8_t i = 0; i < MODE_AMOUNT; i++)
@@ -119,6 +123,12 @@ class FavoritesManager
       }
 
       EEPROM.commit();
+    }
+
+    static void TurnFavoritesOff()
+    {
+      FavoritesRunning = false;
+      nextModeAt = 0;
     }
 
   private:

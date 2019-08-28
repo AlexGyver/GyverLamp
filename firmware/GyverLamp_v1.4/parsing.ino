@@ -169,6 +169,8 @@ void parseUDP()
       currentMode = 16;                                     // принудительное включение режима "Матрица" для индикации перехода в режим обновления по воздуху
       FastLED.clear();
       delay(1);
+      ONflag = true;
+      changePower();
       #endif
     }
 
