@@ -9,27 +9,32 @@ void effectsTick()
       effTimer = millis();
       switch (currentMode)
       {
-        case 0:  sparklesRoutine();    break;
-        case 1:  fireRoutine();        break;
-        case 2:  rainbowVertical();    break;
-        case 3:  rainbowHorizontal();  break;
-        case 4:  colorsRoutine();      break;
-        case 5:  madnessNoise();       break;
-        case 6:  cloudNoise();         break;
-        case 7:  lavaNoise();          break;
-        case 8:  plasmaNoise();        break;
-        case 9:  rainbowNoise();       break;
-        case 10: rainbowStripeNoise(); break;
-        case 11: zebraNoise();         break;
-        case 12: forestNoise();        break;
-        case 13: oceanNoise();         break;
-        case 14: colorRoutine();       break;
-        case 15: snowRoutine();        break;
-        case 16: matrixRoutine();      break;
-        case 17: lightersRoutine();    break;
-        case 18: lightBalls();         break;
-        case 19: whiteColor();         break;
-        default:                       break;
+        case EFF_SPARKLES:       sparklesRoutine();           break;
+        case EFF_FIRE:           fireRoutine();               break;
+        case EFF_RAINBOW_VER:    rainbowVerticalRoutine();    break;
+        case EFF_RAINBOW_HOR:    rainbowHorizontalRoutine();  break;
+        case EFF_RAINBOW_DIAG:   rainbowDiagonalRoutine();    break;
+        case EFF_COLORS:         colorsRoutine();             break;
+        case EFF_MADNESS:        madnessNoiseRoutine();       break;
+        case EFF_CLOUDS:         cloudsNoiseRoutine();        break;
+        case EFF_LAVA:           lavaNoiseRoutine();          break;
+        case EFF_PLASMA:         plasmaNoiseRoutine();        break;
+        case EFF_RAINBOW:        rainbowNoiseRoutine();       break;
+        case EFF_RAINBOW_STRIPE: rainbowStripeNoiseRoutine(); break;
+        case EFF_ZEBRA:          zebraNoiseRoutine();         break;
+        case EFF_FOREST:         forestNoiseRoutine();        break;
+        case EFF_OCEAN:          oceanNoiseRoutine();         break;
+        case EFF_COLOR:          colorRoutine();              break;
+        case EFF_SNOW:           snowRoutine();               break;
+        case EFF_SNOWSTORM:      snowStormRoutine();          break;
+        case EFF_STARFALL:       starfallRoutine();           break;
+        case EFF_MATRIX:         matrixRoutine();             break;
+        case EFF_LIGHTERS:       lightersRoutine();           break;
+        case EFF_LIGHTER_TRACES: ballsRoutine();              break;
+        case EFF_FADING_PIXELS:  lightBallsRoutine();         break;
+        case EFF_CUBE:           ballRoutine();               break;
+        case EFF_WHITE_COLOR:    whiteColorRoutine();         break;
+        default:                                              break;
       }
       FastLED.show();
     }

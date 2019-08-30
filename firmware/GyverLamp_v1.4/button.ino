@@ -27,7 +27,7 @@ void buttonTick()
     FastLED.setBrightness(modes[currentMode].Brightness);
     loadingFlag = true;
     settChanged = true;
-    eepromTimer = millis();
+    eepromTimeout = millis();
     FastLED.clear();
     delay(1);
   }
@@ -38,7 +38,7 @@ void buttonTick()
     FastLED.setBrightness(modes[currentMode].Brightness);
     loadingFlag = true;
     settChanged = true;
-    eepromTimer = millis();
+    eepromTimeout = millis();
     FastLED.clear();
     delay(1);
   }
@@ -48,7 +48,7 @@ void buttonTick()
     #ifdef OTA
     if (otaManager.RequestOtaUpdate())
     {
-      currentMode = 16;                                     // принудительное включение режима "Матрица" для индикации перехода в режим обновления по воздуху
+      currentMode = EFF_MATRIX;                             // принудительное включение режима "Матрица" для индикации перехода в режим обновления по воздуху
       FastLED.clear();
       delay(1);
     }
@@ -76,7 +76,7 @@ void buttonTick()
     }
     FastLED.setBrightness(modes[currentMode].Brightness);
     settChanged = true;
-    eepromTimer = millis();
+    eepromTimeout = millis();
 
     #ifdef GENERAL_DEBUG
     Serial.printf("New brightness value: %d\n", modes[currentMode].Brightness);

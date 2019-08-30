@@ -1,4 +1,5 @@
 // ************* НАСТРОЙКИ *************
+/*
 // "масштаб" эффектов. Чем меньше, тем крупнее!
 #define MADNESS_SCALE 100
 #define CLOUD_SCALE 30
@@ -9,6 +10,7 @@
 #define ZEBRA_SCALE 30
 #define FOREST_SCALE 120
 #define OCEAN_SCALE 90
+*/
 
 
 // ************* ДЛЯ РАЗРАБОТЧИКОВ *****
@@ -32,13 +34,13 @@ CRGBPalette16 currentPalette(PartyColors_p);
 uint8_t colorLoop = 1;
 uint8_t ihue = 0;
 
-void madnessNoise()
+void madnessNoiseRoutine()
 {
   if (loadingFlag)
   {
     loadingFlag = false;
-    scale = modes[5].Scale;
-    speed = modes[5].Speed;
+    scale = modes[EFF_MADNESS].Scale;
+    speed = modes[EFF_MADNESS].Speed;
   }
   fillnoise8();
   for (uint8_t i = 0; i < WIDTH; i++)
@@ -52,33 +54,33 @@ void madnessNoise()
   ihue += 1;
 }
 
-void rainbowNoise()
+void rainbowNoiseRoutine()
 {
   if (loadingFlag)
   {
     loadingFlag = false;
     currentPalette = RainbowColors_p;
-    scale = modes[9].Scale;
-    speed = modes[9].Speed;
+    scale = modes[EFF_RAINBOW].Scale;
+    speed = modes[EFF_RAINBOW].Speed;
     colorLoop = 1;
   }
   fillNoiseLED();
 }
 
-void rainbowStripeNoise()
+void rainbowStripeNoiseRoutine()
 {
   if (loadingFlag)
   {
     loadingFlag = false;
     currentPalette = RainbowStripeColors_p;
-    scale = modes[10].Scale;
-    speed = modes[10].Speed;
+    scale = modes[EFF_RAINBOW_STRIPE].Scale;
+    speed = modes[EFF_RAINBOW_STRIPE].Speed;
     colorLoop = 1;
   }
   fillNoiseLED();
 }
 
-void zebraNoise()
+void zebraNoiseRoutine()
 {
   if (loadingFlag)
   {
@@ -90,74 +92,74 @@ void zebraNoise()
     currentPalette[4] = CRGB::White;
     currentPalette[8] = CRGB::White;
     currentPalette[12] = CRGB::White;
-    scale = modes[11].Scale;
-    speed = modes[11].Speed;
+    scale = modes[EFF_ZEBRA].Scale;
+    speed = modes[EFF_ZEBRA].Speed;
     colorLoop = 1;
   }
   fillNoiseLED();
 }
 
-void forestNoise()
+void forestNoiseRoutine()
 {
   if (loadingFlag)
   {
     loadingFlag = false;
     currentPalette = ForestColors_p;
-    scale = modes[12].Scale;
-    speed = modes[12].Speed;
+    scale = modes[EFF_FOREST].Scale;
+    speed = modes[EFF_FOREST].Speed;
     colorLoop = 0;
   }
   fillNoiseLED();
 }
 
-void oceanNoise()
+void oceanNoiseRoutine()
 {
   if (loadingFlag)
   {
     loadingFlag = false;
     currentPalette = OceanColors_p;
-    scale = modes[13].Scale;
-    speed = modes[13].Speed;
+    scale = modes[EFF_OCEAN].Scale;
+    speed = modes[EFF_OCEAN].Speed;
     colorLoop = 0;
   }
 
   fillNoiseLED();
 }
 
-void plasmaNoise()
+void plasmaNoiseRoutine()
 {
   if (loadingFlag)
   {
     loadingFlag = false;
     currentPalette = PartyColors_p;
-    scale = modes[8].Scale;
-    speed = modes[8].Speed;
+    scale = modes[EFF_PLASMA].Scale;
+    speed = modes[EFF_PLASMA].Speed;
     colorLoop = 1;
   }
   fillNoiseLED();
 }
 
-void cloudNoise()
+void cloudsNoiseRoutine()
 {
   if (loadingFlag)
   {
     loadingFlag = false;
     currentPalette = CloudColors_p;
-    scale = modes[6].Scale;
-    speed = modes[6].Speed;
+    scale = modes[EFF_CLOUDS].Scale;
+    speed = modes[EFF_CLOUDS].Speed;
     colorLoop = 0;
   }
   fillNoiseLED();
 }
 
-void lavaNoise()
+void lavaNoiseRoutine()
 {
   if (loadingFlag)
   {
     loadingFlag = false;
     currentPalette = LavaColors_p;
-    scale = modes[7].Scale;
-    speed = modes[7].Speed;
+    scale = modes[EFF_LAVA].Scale;
+    speed = modes[EFF_LAVA].Speed;
     colorLoop = 0;
   }
   fillNoiseLED();

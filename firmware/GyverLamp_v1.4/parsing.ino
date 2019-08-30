@@ -44,7 +44,7 @@ void parseUDP()
       modes[currentMode].Brightness = constrain(inputBuffer.substring(3).toInt(), 1, 255);
       FastLED.setBrightness(modes[currentMode].Brightness);
       settChanged = true;
-      eepromTimer = millis();
+      eepromTimeout = millis();
       sendCurrent();
     }
 
@@ -53,7 +53,7 @@ void parseUDP()
       modes[currentMode].Speed = inputBuffer.substring(3).toInt();
       loadingFlag = true;
       settChanged = true;
-      eepromTimer = millis();
+      eepromTimeout = millis();
       sendCurrent();
     }
 
@@ -62,7 +62,7 @@ void parseUDP()
       modes[currentMode].Scale = inputBuffer.substring(3).toInt();
       loadingFlag = true;
       settChanged = true;
-      eepromTimer = millis();
+      eepromTimeout = millis();
       sendCurrent();
     }
 
@@ -157,7 +157,7 @@ void parseUDP()
       //FavoritesManager::SetStatus(inputBuffer);
       sendFavorites();
       settChanged = true;
-      eepromTimer = millis();
+      eepromTimeout = millis();
     }
 
     else if (inputBuffer.startsWith("OTA"))
@@ -166,7 +166,7 @@ void parseUDP()
       otaManager.RequestOtaUpdate();
       delay(50);
       otaManager.RequestOtaUpdate();
-      currentMode = 16;                                     // принудительное включение режима "Матрица" для индикации перехода в режим обновления по воздуху
+      currentMode = EFF_MATRIX;                             // принудительное включение режима "Матрица" для индикации перехода в режим обновления по воздуху
       FastLED.clear();
       delay(1);
       ONflag = true;

@@ -40,6 +40,11 @@
  * 72-74     3        режим №18: яркость, скорость, масштаб (по одному байту)
  * 75-77     3        режим №19: яркость, скорость, масштаб (по одному байту)
  * 78-80     3        режим №20: яркость, скорость, масштаб (по одному байту)
+ * 81-83     3        режим №21: яркость, скорость, масштаб (по одному байту)
+ * 84-86     3        режим №22: яркость, скорость, масштаб (по одному байту)
+ * 87-89     3        режим №23: яркость, скорость, масштаб (по одному байту)
+ * 90-92     3        режим №24: яркость, скорость, масштаб (по одному байту)
+ * 93-95     3        режим №25: яркость, скорость, масштаб (по одному байту)
  *
  * 111-134   24       настройки режима избранных эффектов (интервал - 2 байта; разброс - 2 байта; вкл/выкл каждого эффекта - 20 (MODE_AMOUNT) байт; вкл/выкл не хранится в EEPROM)
  * 
@@ -48,13 +53,12 @@
  * 200       1        текущий режим (currentMode)
  *
  * Не используются адреса:
- * 81-110    30       резерв, можно добавить ещё 10 эффектов
+ * 96-110    15       резерв, можно добавить ещё 5 эффектов
  * 135-197   63       если добавить ещё 10 эффектов, начальный адрес неиспользуемой памяти сдвинется с 135 на 145
 */
 
 #include <EEPROM.h>
 #include "Types.h"
-
 #define EEPROM_TOTAL_BYTES_USED              (201U)         // общий размер используемой EEPROM памяти (сумма всех хранимых настроек + 1 байт)
 #define EEPROM_ALARM_START_ADDRESS           (0U)           // начальный адрес в EEPROM памяти для записи настроек будильников
 #define EEPROM_MODES_START_ADDRESS           (21U)          // начальный адрес в EEPROM памяти для записи настроек эффектов (яркость, скорость, масштаб)
@@ -130,12 +134,12 @@ class EepromManager
       EEPROM.commit();
     }
     
-    static void HandleEepromTick(bool* settChanged, uint32_t* eepromTimer, int8_t* currentMode, ModeType modes[], void (*saveFavoritesSettings)())
+    static void HandleEepromTick(bool* settChanged, uint32_t* eepromTimeout, int8_t* currentMode, ModeType modes[], void (*saveFavoritesSettings)())
     {
-      if (*settChanged && millis() - *eepromTimer > EEPROM_WRITE_DELAY)
+      if (*settChanged && millis() - *eepromTimeout > EEPROM_WRITE_DELAY)
       {
         *settChanged = false;
-        *eepromTimer = millis();
+        *eepromTimeout = millis();
         SaveModesSettings(currentMode, modes);
         if (EEPROM.read(EEPROM_CURRENT_MODE_ADDRESS) != *currentMode)
         {
