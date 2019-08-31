@@ -88,6 +88,7 @@ WiFiUDP ntpUDP;
 NTPClient timeClient(ntpUDP, NTP_ADDRESS, GMT * 3600, NTP_INTERVAL);
 timerMinim timeTimer(3000);
 GButton touch(BTN_PIN, LOW_PULL, NORM_OPEN);
+ESP8266WebServer http(8080); // запуск слушателя 8080 порта(эйкей вебсервер)
 
 // ----------------- ПЕРЕМЕННЫЕ ------------------
 const char* autoConnectSSID = AC_SSID;
@@ -156,6 +157,7 @@ void setup() {
     Serial.println(myIP);
 
     server.begin();
+    
   } else {                // подключаемся к роутеру
     Serial.print("WiFi manager");
     WiFiManager wifiManager;
@@ -213,6 +215,8 @@ void setup() {
   timeClient.begin();
   memset(matrixValue, 0, sizeof(matrixValue));
 
+  webserver(); 
+    
   randomSeed(micros());
 }
 
@@ -222,6 +226,7 @@ void loop() {
   eepromTick();
   timeTick();
   buttonTick();
+  http.handleClient();
   ESP.wdtFeed();   // пнуть собаку
   yield();
 }
