@@ -130,7 +130,7 @@ class EepromManager
 
     static void SaveModesSettings(int8_t* currentMode, ModeType modes[])
     {
-      EEPROM.put(3 * (*currentMode) + EEPROM_MODES_START_ADDRESS, modes[*currentMode]);
+      EEPROM.put(EEPROM_MODES_START_ADDRESS + EEPROM_MODE_STRUCT_SIZE * (*currentMode), modes[*currentMode]);
       EEPROM.commit();
     }
     
@@ -152,8 +152,8 @@ class EepromManager
 
     static void SaveAlarmsSettings(uint8_t* alarmNumber, AlarmType alarms[])
     {
-      EEPROM.write(5 * (*alarmNumber), alarms[*alarmNumber].State);
-      WriteUint16((uint16_t)(5 * (*alarmNumber) + 1), alarms[*alarmNumber].Time);
+      EEPROM.write(EEPROM_ALARM_START_ADDRESS + EEPROM_ALARM_STRUCT_SIZE * (*alarmNumber), alarms[*alarmNumber].State);
+      WriteUint16(EEPROM_ALARM_START_ADDRESS + EEPROM_ALARM_STRUCT_SIZE * (*alarmNumber) + 1, alarms[*alarmNumber].Time);
       EEPROM.commit();
     }
 

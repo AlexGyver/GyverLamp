@@ -56,7 +56,7 @@
 */
 
 // Ссылка для менеджера плат:
-// http://arduino.esp8266.com/stable/package_esp8266com_index.json
+// https://arduino.esp8266.com/stable/package_esp8266com_index.json
 
 
 // ============= НАСТРОЙКИ =============
@@ -320,13 +320,6 @@ void setup()
     modes, alarms, &dawnMode, &currentMode,
     &(FavoritesManager::ReadFavoritesFromEeprom),
     &(FavoritesManager::SaveFavoritesToEeprom));
-
-  sendCurrent();                                            // отправляем настройки (куда?)
-  char reply[inputBuffer.length() + 1];
-  inputBuffer.toCharArray(reply, inputBuffer.length() + 1);
-  Udp.beginPacket(Udp.remoteIP(), Udp.remotePort());
-  Udp.write(reply);
-  Udp.endPacket();
 
   #ifdef USE_NTP
   timeClient.begin();
