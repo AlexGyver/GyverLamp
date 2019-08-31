@@ -134,7 +134,7 @@ uint8_t AP_STATIC_IP[] =      {192, 168, 4, 1};             // статичес�
 #define EFF_MATRIX            (19U)                         // Матрица
 #define EFF_LIGHTERS          (20U)                         // Светлячки
 #define EFF_LIGHTER_TRACES    (21U)                         // Светлячки со шлейфом
-#define EFF_FADING_PIXELS     (22U)                         // Угасающие пиксели
+#define EFF_PAINTBALL         (22U)                         // Пейнтбол
 #define EFF_CUBE              (23U)                         // Блуждающий кубик
 #define EFF_WHITE_COLOR       (24U)                         // Белый свет
 #define MODE_AMOUNT           (25U)                         // количество режимов

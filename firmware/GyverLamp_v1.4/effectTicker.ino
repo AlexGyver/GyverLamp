@@ -31,7 +31,7 @@ void effectsTick()
         case EFF_MATRIX:         matrixRoutine();             break;
         case EFF_LIGHTERS:       lightersRoutine();           break;
         case EFF_LIGHTER_TRACES: ballsRoutine();              break;
-        case EFF_FADING_PIXELS:  lightBallsRoutine();         break;
+        case EFF_PAINTBALL:      lightBallsRoutine();         break;
         case EFF_CUBE:           ballRoutine();               break;
         case EFF_WHITE_COLOR:    whiteColorRoutine();         break;
         default:                                              break;
