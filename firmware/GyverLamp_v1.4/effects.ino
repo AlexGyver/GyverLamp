@@ -47,11 +47,11 @@ void fadePixel(uint8_t i, uint8_t j, uint8_t step)          // новый фей
 
 // ------------- огонь -----------------
 #define SPARKLES              (1U)                          // вылетающие угольки вкл выкл
-unsigned char line[WIDTH];
-int32_t pcnt = 0;
+uint8_t line[WIDTH];
+uint8_t pcnt = 0;
 
 //these values are substracetd from the generated values to give a shape to the animation
-const unsigned char valueMask[8][16] PROGMEM =
+const uint8_t valueMask[8][16] PROGMEM =
 {
   {32 , 0  , 0  , 0  , 0  , 0  , 0  , 32 , 32 , 0  , 0  , 0  , 0  , 0  , 0  , 32 },
   {64 , 0  , 0  , 0  , 0  , 0  , 0  , 64 , 64 , 0  , 0  , 0  , 0  , 0  , 0  , 64 },
@@ -62,10 +62,10 @@ const unsigned char valueMask[8][16] PROGMEM =
   {255, 160, 128, 96 , 96 , 128, 160, 255, 255, 160, 128, 96 , 96 , 128, 160, 255},
   {255, 192, 160, 128, 128, 160, 192, 255, 255, 192, 160, 128, 128, 160, 192, 255}
 };
+
 //these are the hues for the fire,
 //should be between 0 (red) to about 25 (yellow)
-
-const unsigned char hueMask[8][16] PROGMEM =
+const uint8_t hueMask[8][16] PROGMEM =
 {
   {1 , 11, 19, 25, 25, 22, 11, 1 , 1 , 11, 19, 25, 25, 22, 11, 1 },
   {1 , 8 , 13, 19, 25, 19, 8 , 1 , 1 , 8 , 13, 19, 25, 19, 8 , 1 },
@@ -129,14 +129,14 @@ void shiftUp()
 // draw a frame, interpolating between 2 "key frames"
 // @param pcnt percentage of interpolation
 
-void drawFrame(int32_t pcnt)
+void drawFrame(uint8_t pcnt)
 {
   int32_t nextv;
 
   //each row interpolates with the one before it
-  for (unsigned char y = HEIGHT - 1; y > 0; y--)
+  for (uint8_t y = HEIGHT - 1; y > 0; y--)
   {
-    for (unsigned char x = 0; x < WIDTH; x++)
+    for (uint8_t x = 0; x < WIDTH; x++)
     {
       uint8_t newX = x;
       if (x > 15) newX = x % 16;
@@ -171,7 +171,7 @@ void drawFrame(int32_t pcnt)
   }
 
   //first row interpolates with the "next" line
-  for (unsigned char x = 0; x < WIDTH; x++)
+  for (uint8_t x = 0; x < WIDTH; x++)
   {
     uint8_t newX = x;
     if (x > 15) newX = x % 16;
@@ -252,9 +252,15 @@ void colorsRoutine()
 // ------------- цвет ------------------
 void colorRoutine()
 {
-  for (int32_t i = 0; i < NUM_LEDS; i++)
+  if (loadingFlag)
   {
-    leds[i] = CHSV(modes[EFF_COLOR].Scale * 2.5, 255, 255);
+    loadingFlag = false;
+    FastLED.clear();
+
+    for (int16_t i = 0; i < NUM_LEDS; i++)
+    {
+      leds[i] = CHSV(modes[EFF_COLOR].Scale * 2.5, 255, 255);
+    }
   }
 }
 
@@ -486,7 +492,7 @@ void ballsRoutine()
   {
     loadingFlag = false;
 
-    for (byte j = 0; j < BALLS_AMOUNT; j++)
+    for (uint8_t j = 0; j < BALLS_AMOUNT; j++)
     {
       int8_t sign;
       // забиваем случайными данными
@@ -537,7 +543,7 @@ void ballsRoutine()
   }
 }
 
-// ------------- угасающие пиксели -------------
+// ------------- пейнтбол -------------
 const uint8_t BorderWidth = 2;
 void lightBallsRoutine()
 {

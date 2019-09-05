@@ -32,7 +32,7 @@ void timeTick()
           if (!ntpServerAddressResolved)
           {
             #ifdef GENERAL_DEBUG
-            Serial.println("Функции будильника отключены до восстановления подключения к интернету");
+            Serial.println(F("Функции будильника отключены до восстановления подключения к интернету"));
             #endif
           }
         }
@@ -101,7 +101,7 @@ void resolveNtpServerAddress(bool &ntpServerAddressResolved)              // ф�
     #ifdef GENERAL_DEBUG
     if (ntpServerAddressResolved)
     {
-      Serial.println("Подключение к интернету отсутствует");
+      Serial.println(F("Подключение к интернету отсутствует"));
     }
     #endif
 
@@ -112,7 +112,7 @@ void resolveNtpServerAddress(bool &ntpServerAddressResolved)              // ф�
     #ifdef GENERAL_DEBUG
     if (!ntpServerAddressResolved)
     {
-      Serial.println("Подключение к интернету установлено");
+      Serial.println(F("Подключение к интернету установлено"));
     }
     #endif
 

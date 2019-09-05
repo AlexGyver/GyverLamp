@@ -18,7 +18,7 @@ class TimerManager
            millis() >= TimerManager::TimeToFire)
       {
         #ifdef GENERAL_DEBUG
-        Serial.printf("Выключение по таймеру\n\n");
+        Serial.print(F("Выключение по таймеру\n\n"));
         #endif
 
         TimerManager::TimerRunning = false;

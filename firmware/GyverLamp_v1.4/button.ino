@@ -10,7 +10,6 @@ void buttonTick()
     {
       manualOff = true;
       dawnFlag = false;
-      loadingFlag = true;
       FastLED.setBrightness(modes[currentMode].Brightness);
       changePower();
     }
@@ -19,6 +18,7 @@ void buttonTick()
       ONflag = !ONflag;
       changePower();
     }
+    loadingFlag = true;
   }
 
   if (ONflag && touch.isDouble())
@@ -79,7 +79,7 @@ void buttonTick()
     eepromTimeout = millis();
 
     #ifdef GENERAL_DEBUG
-    Serial.printf("New brightness value: %d\n", modes[currentMode].Brightness);
+    Serial.printf_P(PSTR("New brightness value: %d\n"), modes[currentMode].Brightness);
     #endif
   }
 }

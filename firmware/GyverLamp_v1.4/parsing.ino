@@ -1,37 +1,38 @@
 void parseUDP()
 {
   int32_t packetSize = Udp.parsePacket();
+  char buff[MAX_UDP_BUFFER_SIZE], *endToken = NULL;
 
   if (packetSize)
   {
-    int32_t n = Udp.read(packetBuffer, UDP_TX_PACKET_MAX_SIZE);
-    packetBuffer[n] = 0;
-    inputBuffer = packetBuffer;
+    int16_t n = Udp.read(packetBuffer, MAX_UDP_BUFFER_SIZE);
+    packetBuffer[n] = '\0';
+    strcpy(inputBuffer, packetBuffer);
 
     #ifdef GENERAL_DEBUG
-    Serial.print("Inbound UDP packet: ");
+    Serial.print(F("Inbound UDP packet: "));
     Serial.println(inputBuffer);
     #endif
 
-    if (inputBuffer.startsWith("DEB"))
+    if (!strncmp_P(inputBuffer, PSTR("DEB"), 3))
     {
-      inputBuffer =
         #ifdef USE_NTP
-        "OK " + timeClient.getFormattedTime();
+        sprintf_P(inputBuffer, PSTR("%s%s"), PSTR("OK "), timeClient.getFormattedTime().c_str());
         #else
-        "OK --:--";
+        strcpy_P(inputBuffer, PSTR("OK --:--"));
         #endif
     }
 
-    else if (inputBuffer.startsWith("GET"))
+    else if (!strncmp_P(inputBuffer, PSTR("GET"), 3))
     {
       sendCurrent();
     }
 
-    else if (inputBuffer.startsWith("EFF"))
+    else if (!strncmp_P(inputBuffer, PSTR("EFF"), 3))
     {
       EepromManager::SaveModesSettings(&currentMode, modes);
-      currentMode = (byte)inputBuffer.substring(3).toInt();
+      memcpy(buff, &inputBuffer[3], strlen(inputBuffer));   // взять подстроку, состоящую последних символов строки inputBuffer, начиная с символа 4
+      currentMode = (uint8_t)atoi(buff);
       loadingFlag = true;
       FastLED.clear();
       delay(1);
@@ -39,128 +40,137 @@ void parseUDP()
       FastLED.setBrightness(modes[currentMode].Brightness);
     }
 
-    else if (inputBuffer.startsWith("BRI"))
+    else if (!strncmp_P(inputBuffer, PSTR("BRI"), 3))
     {
-      modes[currentMode].Brightness = constrain(inputBuffer.substring(3).toInt(), 1, 255);
+      memcpy(buff, &inputBuffer[3], strlen(inputBuffer));   // взять подстроку, состоящую последних символов строки inputBuffer, начиная с символа 4
+      modes[currentMode].Brightness = constrain(atoi(buff), 1, 255);
       FastLED.setBrightness(modes[currentMode].Brightness);
       settChanged = true;
       eepromTimeout = millis();
       sendCurrent();
     }
 
-    else if (inputBuffer.startsWith("SPD"))
+    else if (!strncmp_P(inputBuffer, PSTR("SPD"), 3))
     {
-      modes[currentMode].Speed = inputBuffer.substring(3).toInt();
+      memcpy(buff, &inputBuffer[3], strlen(inputBuffer));   // взять подстроку, состоящую последних символов строки inputBuffer, начиная с символа 4
+      modes[currentMode].Speed = atoi(buff);
       loadingFlag = true;
       settChanged = true;
       eepromTimeout = millis();
       sendCurrent();
     }
 
-    else if (inputBuffer.startsWith("SCA"))
+    else if (!strncmp_P(inputBuffer, PSTR("SCA"), 3))
     {
-      modes[currentMode].Scale = inputBuffer.substring(3).toInt();
+      memcpy(buff, &inputBuffer[3], strlen(inputBuffer));   // взять подстроку, состоящую последних символов строки inputBuffer, начиная с символа 4
+      modes[currentMode].Scale = atoi(buff);
       loadingFlag = true;
       settChanged = true;
       eepromTimeout = millis();
       sendCurrent();
     }
 
-    else if (inputBuffer.startsWith("P_ON"))
+    else if (!strncmp_P(inputBuffer, PSTR("P_ON"), 4))
     {
       ONflag = true;
+      loadingFlag = true;
       changePower();
       sendCurrent();
     }
 
-    else if (inputBuffer.startsWith("P_OFF"))
+    else if (!strncmp_P(inputBuffer, PSTR("P_OFF"), 5))
     {
       ONflag = false;
       changePower();
       sendCurrent();
     }
 
-    else if (inputBuffer.startsWith("ALM_SET"))
+    else if (!strncmp_P(inputBuffer, PSTR("ALM_SET"), 7))
     {
       uint8_t alarmNum = (char)inputBuffer[7] - '0';
       alarmNum -= 1;
-      if (inputBuffer.indexOf("ON") != -1)
+      if (strstr_P(inputBuffer, PSTR("ON")) - inputBuffer == 9)
       {
         alarms[alarmNum].State = true;
         sendAlarms();
       }
-      else if (inputBuffer.indexOf("OFF") != -1)
+      else if (strstr_P(inputBuffer, PSTR("OFF")) - inputBuffer == 9)
       {
         alarms[alarmNum].State = false;
         sendAlarms();
       }
       else
       {
-        int32_t alarmTime = inputBuffer.substring(8).toInt();
-        alarms[alarmNum].Time = alarmTime;
-        uint8_t hour = floor(alarmTime / 60);
-        uint8_t minute = alarmTime - hour * 60;
+        memcpy(buff, &inputBuffer[8], strlen(inputBuffer)); // взять подстроку, состоящую последних символов строки inputBuffer, начиная с символа 9
+        alarms[alarmNum].Time = atoi(buff);
+        uint8_t hour = floor(alarms[alarmNum].Time / 60);
+        uint8_t minute = alarms[alarmNum].Time - hour * 60;
         sendAlarms();
       }
       EepromManager::SaveAlarmsSettings(&alarmNum, alarms);
     }
 
-    else if (inputBuffer.startsWith("ALM_GET"))
+    else if (!strncmp_P(inputBuffer, PSTR("ALM_GET"), 7))
     {
       sendAlarms();
     }
 
-    else if (inputBuffer.startsWith("DAWN")) 
+    else if (!strncmp_P(inputBuffer, PSTR("DAWN"), 4))
     {
-      dawnMode = inputBuffer.substring(4).toInt() - 1;
+      memcpy(buff, &inputBuffer[4], strlen(inputBuffer));   // взять подстроку, состоящую последних символов строки inputBuffer, начиная с символа 5
+      dawnMode = atoi(buff) - 1;
       EepromManager::SaveDawnMode(&dawnMode);
       sendAlarms();
     }
 
-    else if (inputBuffer.startsWith("DISCOVER"))            // обнаружение приложением модуля esp в локальной сети
+    else if (!strncmp_P(inputBuffer, PSTR("DISCOVER"), 8))  // обнаружение приложением модуля esp в локальной сети
     {
       if (ESP_MODE == 1)                                    // работает только в режиме WiFi клиента
       {
-        inputBuffer = "IP";
-        inputBuffer += " ";
-        inputBuffer += String(WiFi.localIP()[0]) + "." +
-                       String(WiFi.localIP()[1]) + "." +
-                       String(WiFi.localIP()[2]) + "." +
-                       String(WiFi.localIP()[3]);
-        inputBuffer += ":";
-        inputBuffer += String(ESP_UDP_PORT);
+        sprintf_P(inputBuffer, PSTR("IP %u.%u.%u.%u:%u"),
+          WiFi.localIP()[0],
+          WiFi.localIP()[1],
+          WiFi.localIP()[2],
+          WiFi.localIP()[3],
+          ESP_UDP_PORT);
       }
     }
 
-    else if (inputBuffer.startsWith("TMR_GET"))
+    else if (!strncmp_P(inputBuffer, PSTR("TMR_GET"), 7))
     {
       sendTimer();
     }
 
-    else if (inputBuffer.startsWith("TMR_SET"))
+    else if (!strncmp_P(inputBuffer, PSTR("TMR_SET"), 7))
     {
-      TimerManager::TimerRunning = inputBuffer.substring(8, 9).toInt();
-      TimerManager::TimerOption = inputBuffer.substring(10, 11).toInt();
-      TimerManager::TimeToFire = millis() + (uint64_t)(inputBuffer.substring(12).toInt() * 1000);
+      memcpy(buff, &inputBuffer[8], 2);                     // взять подстроку, состоящую из 9 и 10 символов, из строки inputBuffer
+      TimerManager::TimerRunning = (bool)atoi(buff);
+
+      memcpy(buff, &inputBuffer[10], 2);                    // взять подстроку, состоящую из 11 и 12 символов, из строки inputBuffer
+      TimerManager::TimerOption = (uint8_t)atoi(buff);
+
+      memcpy(buff, &inputBuffer[12], strlen(inputBuffer));  // взять подстроку, состоящую последних символов строки inputBuffer, начиная с символа 13
+      TimerManager::TimeToFire = millis() + strtoull(buff, &endToken, 10) * 1000;
+
       TimerManager::TimerHasFired = false;
       sendTimer();
     }
 
-    else if (inputBuffer.startsWith("FAV_GET"))
+    else if (!strncmp_P(inputBuffer, PSTR("FAV_GET"), 7))
     {
       sendFavorites();
     }
 
-    else if (inputBuffer.startsWith("FAV_SET"))
+    else if (!strncmp_P(inputBuffer, PSTR("FAV_SET"), 7))
     {
-      FavoritesManager::ConfigureFavorites(inputBuffer.c_str());
+      FavoritesManager::ConfigureFavorites(inputBuffer);
       //FavoritesManager::SetStatus(inputBuffer);
       sendFavorites();
       settChanged = true;
       eepromTimeout = millis();
     }
 
-    else if (inputBuffer.startsWith("OTA"))
+    else if (!strncmp_P(inputBuffer, PSTR("OTA"), 3))
     {
       #ifdef OTA
       otaManager.RequestOtaUpdate();
@@ -176,10 +186,10 @@ void parseUDP()
 
     else
     {
-      inputBuffer = "";
+      inputBuffer[0] = '\0';
     }
 
-    if (inputBuffer.length() <= 0)
+    if (strlen(inputBuffer) <= 0)
     {
       return;
     }
@@ -189,15 +199,15 @@ void parseUDP()
       return;
     }
 
-    char reply[inputBuffer.length() + 1];
-    inputBuffer.toCharArray(reply, inputBuffer.length() + 1);
-    inputBuffer.remove(0);                                  // очистка буфера, читобы не он не интерпретировался, как следующий udp пакет
+    char reply[strlen(inputBuffer) + 1];
+    strcpy(reply, inputBuffer);
+    inputBuffer[0] = '\0';                                  // очистка буфера, читобы не он не интерпретировался, как следующий udp пакет
     Udp.beginPacket(Udp.remoteIP(), Udp.remotePort());
     Udp.write(reply);
     Udp.endPacket();
 
     #ifdef GENERAL_DEBUG
-    Serial.print("Outbound UDP packet: ");
+    Serial.print(F("Outbound UDP packet: "));
     Serial.println(reply);
     Serial.println();
     #endif
@@ -206,74 +216,63 @@ void parseUDP()
 
 void sendCurrent()
 {
-  inputBuffer = "CURR";
-  inputBuffer += " ";
-  inputBuffer += String(currentMode);
-  inputBuffer += " ";
-  inputBuffer += String(modes[currentMode].Brightness);
-  inputBuffer += " ";
-  inputBuffer += String(modes[currentMode].Speed);
-  inputBuffer += " ";
-  inputBuffer += String(modes[currentMode].Scale);
-  inputBuffer += " ";
-  inputBuffer += String(ONflag);
-  inputBuffer += " ";
-  inputBuffer += String(ESP_MODE);
-  inputBuffer += " ";
+  sprintf_P(inputBuffer, PSTR("CURR %u %u %u %u %u %u"),
+    currentMode,
+    modes[currentMode].Brightness,
+    modes[currentMode].Speed,
+    modes[currentMode].Scale,
+    ONflag,
+    ESP_MODE);
+  
   #ifdef USE_NTP
-  inputBuffer += "1";
+  strcat_P(inputBuffer, PSTR(" 1"));
   #else
-  inputBuffer += "0";
+  strcat_P(inputBuffer, PSTR(" 0"));
   #endif
-  inputBuffer += " ";
-  inputBuffer += String((uint8_t)TimerManager::TimerRunning);
-  inputBuffer += " ";
+
+  sprintf_P(inputBuffer, PSTR("%s %u"), inputBuffer, (uint8_t)TimerManager::TimerRunning);
+
   #ifdef USE_NTP
-  inputBuffer += timeClient.getFormattedTime();
+  sprintf_P(inputBuffer, PSTR("%s %s"), inputBuffer, timeClient.getFormattedTime().c_str());
   #else
-  inputBuffer += String(millis());
+  sprintf_P(inputBuffer, PSTR("%s %ull"), inputBuffer, millis());
   #endif
 }
 
 void sendAlarms()
 {
-  inputBuffer = "ALMS ";
+  strcpy_P(inputBuffer, PSTR("ALMS"));
+
   for (byte i = 0; i < 7; i++)
   {
-    inputBuffer += String(alarms[i].State);
-    inputBuffer += " ";
+    sprintf_P(inputBuffer, PSTR("%s %u"), inputBuffer, (uint8_t)alarms[i].State);
   }
+
   for (byte i = 0; i < 7; i++)
   {
-    inputBuffer += String(alarms[i].Time);
-    inputBuffer += " ";
+    sprintf_P(inputBuffer, PSTR("%s %u"), inputBuffer, alarms[i].Time);
   }
-  inputBuffer += (dawnMode + 1);
+
+  sprintf_P(inputBuffer, PSTR("%s %u"), inputBuffer, dawnMode + 1);
 }
 
 void sendTimer()
 {
-  inputBuffer = "TMR";
-  inputBuffer += " ";
-  inputBuffer += String((uint8_t)TimerManager::TimerRunning);
-  inputBuffer += " ";
-  inputBuffer += String(TimerManager::TimerOption);
-  inputBuffer += " ";
-  inputBuffer += String(TimerManager::TimerRunning ? (uint16_t)floor((TimerManager::TimeToFire - millis()) / 1000) : 0);
+  sprintf_P(inputBuffer, PSTR("TMR %u %u %u"),
+    TimerManager::TimerRunning,
+    TimerManager::TimerOption,
+   (TimerManager::TimerRunning ? (uint16_t)floor((TimerManager::TimeToFire - millis()) / 1000) : 0));
 }
 
 void sendFavorites()
 {
-  inputBuffer = "FAV";
-  inputBuffer += " ";
-  inputBuffer += String((uint8_t)FavoritesManager::FavoritesRunning);
-  inputBuffer += " ";
-  inputBuffer += String((uint16_t)FavoritesManager::Interval);
-  inputBuffer += " ";
-  inputBuffer += String((uint16_t)FavoritesManager::Dispersion);
+  sprintf_P(inputBuffer, PSTR("FAV %u %u %u"),
+    FavoritesManager::FavoritesRunning,
+    FavoritesManager::Interval,
+    FavoritesManager::Dispersion);
+
   for (uint8_t i = 0; i < MODE_AMOUNT; i++)
   {
-    inputBuffer += " ";
-    inputBuffer += String((uint8_t)FavoritesManager::FavoriteModes[i]);
+    sprintf_P(inputBuffer, PSTR("%s %u"), inputBuffer, FavoritesManager::FavoriteModes[i]);
   }
 }
