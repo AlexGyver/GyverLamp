@@ -17,30 +17,30 @@ class FavoritesManager
     static void SetStatus(char* statusText)                 // помещает в statusText состояние режима работы избранных эффектов
     {
       char buff[6];
-      statusText = "FAV ";
+      strcpy_P(statusText, PSTR("FAV "));
 
-      statusText = strcat(statusText, FavoritesRunning ? "1" : "0");
-      statusText = strcat(statusText, " ");
+      strcat_P(statusText, FavoritesRunning ? PSTR("1") : PSTR("0"));
+      strcat_P(statusText, PSTR(" "));
 
       itoa(Interval, buff, 10);
-      statusText = strcat(statusText, buff);
-      statusText = strcat(statusText, " ");
+      strcat(statusText, buff);
+      strcat_P(statusText, PSTR(" "));
       buff[0] = '\0';
 
       itoa(Dispersion, buff, 10);
-      statusText = strcat(statusText, buff);
-      statusText = strcat(statusText, " ");
+      strcat(statusText, buff);
+      strcat_P(statusText, PSTR(" "));
       buff[0] = '\0';
 
       for (uint8_t i = 0; i < MODE_AMOUNT; i++)
       {
         itoa((uint8_t)FavoriteModes[i], buff, 10);
-        statusText = strcat(statusText, buff);
-        if (i < MODE_AMOUNT - 1) statusText = strcat(statusText, " ");
+        strcat(statusText, buff);
+        if (i < MODE_AMOUNT - 1) strcat_P(statusText, PSTR(" "));
         buff[0] = '\0';
       }
 
-      statusText = strcat(statusText, "\0");
+      statusText += '\0';
     }
 
     static void ConfigureFavorites(const char* statusText)  // принимает statusText, парсит его и инициализирует свойства класса значениями из statusText'а

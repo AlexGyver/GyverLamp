@@ -45,6 +45,7 @@ void parseUDP()
       memcpy(buff, &inputBuffer[3], strlen(inputBuffer));   // взять подстроку, состоящую последних символов строки inputBuffer, начиная с символа 4
       modes[currentMode].Brightness = constrain(atoi(buff), 1, 255);
       FastLED.setBrightness(modes[currentMode].Brightness);
+      loadingFlag = true;
       settChanged = true;
       eepromTimeout = millis();
       sendCurrent();
@@ -158,14 +159,13 @@ void parseUDP()
 
     else if (!strncmp_P(inputBuffer, PSTR("FAV_GET"), 7))
     {
-      sendFavorites();
+        FavoritesManager::SetStatus(inputBuffer);
     }
 
     else if (!strncmp_P(inputBuffer, PSTR("FAV_SET"), 7))
     {
       FavoritesManager::ConfigureFavorites(inputBuffer);
-      //FavoritesManager::SetStatus(inputBuffer);
-      sendFavorites();
+      FavoritesManager::SetStatus(inputBuffer);
       settChanged = true;
       eepromTimeout = millis();
     }
@@ -262,17 +262,4 @@ void sendTimer()
     TimerManager::TimerRunning,
     TimerManager::TimerOption,
    (TimerManager::TimerRunning ? (uint16_t)floor((TimerManager::TimeToFire - millis()) / 1000) : 0));
-}
-
-void sendFavorites()
-{
-  sprintf_P(inputBuffer, PSTR("FAV %u %u %u"),
-    FavoritesManager::FavoritesRunning,
-    FavoritesManager::Interval,
-    FavoritesManager::Dispersion);
-
-  for (uint8_t i = 0; i < MODE_AMOUNT; i++)
-  {
-    sprintf_P(inputBuffer, PSTR("%s %u"), inputBuffer, FavoritesManager::FavoriteModes[i]);
-  }
 }

@@ -662,6 +662,39 @@ void whiteColorRoutine()
   }
 }
 
+// ------------- экспериментальный эффект -------------
+// ------------- белый свет (уменьшение яркости по горизинтали от центра вверх и вниз; масштаб - ширина центральной полосы максимальной яркости; яркость - общая яркость -------------
+#define MINIMUM_BRIGHTNES     (90U)                         // минимальная яркость (ниже матрица мерцает)
+void whiteColorRoutine2()
+{
+  if (loadingFlag)
+  {
+    Serial.println("Отрисовка");
+    loadingFlag = false;
+    FastLED.clear();
+    delay(1);
+
+    uint8_t centerY = max((uint8_t)round(HEIGHT / 2.0F) - 1, 0);
+    uint8_t bottomOffset = (uint8_t)(!(HEIGHT & 1) && (HEIGHT > 1));                      // если высота матрицы чётная, линий с максимальной яркостью две, а линии с угасающей яркостью снизу будут смещены на один ряд
+    for (int16_t y = centerY; y >= 0; y--)
+    {
+      CRGB color = CHSV(100, 1,
+        constrain(uint8_t(                                                                // определяем яркость
+          modes[EFF_WHITE_COLOR].Brightness * (y + 1) / (centerY + 1) +                   // влияние координаты Y на яркость (плавное затухаие вверх и вниз)
+          modes[EFF_WHITE_COLOR].Brightness * modes[EFF_WHITE_COLOR].Scale / 100),        // влияние масштаба на яркость
+          MINIMUM_BRIGHTNES,
+          max((uint8_t)MINIMUM_BRIGHTNES, (uint8_t)modes[EFF_WHITE_COLOR].Brightness)
+        ));
+
+      for (uint8_t x = 0; x < WIDTH; x++)
+      {
+        drawPixelXY(x, y, color);                                                         // при чётной высоте матрицы максимально яркими отрисуются 2 центральных горизонтальных полосы
+        drawPixelXY(x, max((uint8_t)(HEIGHT - 1) - (y + 1) + bottomOffset, 0), color);    // при нечётной - одна, но дважды
+      }
+    }
+  }
+}
+
 /*
  * устарело
 void lightersRoutine()

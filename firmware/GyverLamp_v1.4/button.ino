@@ -4,6 +4,7 @@ bool brightDirection;
 void buttonTick()
 {
   touch.tick();
+
   if (touch.isSingle())
   {
     if (dawnFlag)
