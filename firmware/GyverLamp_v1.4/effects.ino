@@ -662,14 +662,11 @@ void whiteColorRoutine()
   }
 }
 
-// ------------- экспериментальный эффект -------------
-// ------------- белый свет (уменьшение яркости по горизинтали от центра вверх и вниз; масштаб - ширина центральной полосы максимальной яркости; яркость - общая яркость -------------
-#define MINIMUM_BRIGHTNES     (90U)                         // минимальная яркость (ниже матрица мерцает)
-void whiteColorRoutine2()
+// ------------- белый свет (светится горизонтальная полоса по центру лампы; масштаб - высота центральной горизонтальной полосы; яркость - общая яркость) -------------
+void whiteColorStripeRoutine()
 {
   if (loadingFlag)
   {
-    Serial.println("Отрисовка");
     loadingFlag = false;
     FastLED.clear();
     delay(1);
@@ -679,12 +676,9 @@ void whiteColorRoutine2()
     for (int16_t y = centerY; y >= 0; y--)
     {
       CRGB color = CHSV(100, 1,
-        constrain(uint8_t(                                                                // определяем яркость
-          modes[EFF_WHITE_COLOR].Brightness * (y + 1) / (centerY + 1) +                   // влияние координаты Y на яркость (плавное затухаие вверх и вниз)
-          modes[EFF_WHITE_COLOR].Brightness * modes[EFF_WHITE_COLOR].Scale / 100),        // влияние масштаба на яркость
-          MINIMUM_BRIGHTNES,
-          max((uint8_t)MINIMUM_BRIGHTNES, (uint8_t)modes[EFF_WHITE_COLOR].Brightness)
-        ));
+        y == centerY                                                                                                    // определяем яркость
+          ? 255                                                                                                         // для центральной горизонтальной полосы (или двух) яркость всегда равна 255
+          : (modes[EFF_WHITE_COLOR].Scale / 100.0F) > ((centerY + 1) - (y + 1.0F)) / (centerY + 1.0F) ? 255 : 0);       // для остальных горизонтальных полос яркость равна либо 255, либо 0 в зависимости от масштаба
 
       for (uint8_t x = 0; x < WIDTH; x++)
       {

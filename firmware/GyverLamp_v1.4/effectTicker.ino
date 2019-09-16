@@ -33,7 +33,7 @@ void effectsTick()
         case EFF_LIGHTER_TRACES: ballsRoutine();              break;
         case EFF_PAINTBALL:      lightBallsRoutine();         break;
         case EFF_CUBE:           ballRoutine();               break;
-        case EFF_WHITE_COLOR:    whiteColorRoutine();         break;
+        case EFF_WHITE_COLOR:    whiteColorStripeRoutine();   break;
         default:                                              break;
       }
       FastLED.show();
