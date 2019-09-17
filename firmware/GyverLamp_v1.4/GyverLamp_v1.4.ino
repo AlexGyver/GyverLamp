@@ -58,6 +58,10 @@
   - Большая оптимизация использования памяти
   - Исправлена ошибка невключения эффекта "Белый свет" приложением и кнопкой
   - Исправлена ошибка неправильного выбора интервала в режиме Избранное в android приложении
+  --- 16.09.2019
+  - Добавлено сохранение состояния (вкл/выкл) лампы в EEPROM память
+  - Добавлен новый эффект белого света (с горизонтальной полосой)
+  - Реорганизован код, исправлены ошибки
 */
 
 // Ссылка для менеджера плат:
@@ -68,7 +72,6 @@
 #include "Constants.h"
 #include <FastLED.h>
 #include <ESP8266WiFi.h>
-#include <DNSServer.h>
 #include <ESP8266WebServer.h>
 #include <WiFiManager.h>
 #include <WiFiUdp.h>
@@ -119,7 +122,7 @@ static const uint8_t maxDim = max(WIDTH, HEIGHT);
 ModeType modes[MODE_AMOUNT];
 AlarmType alarms[7];
 
-uint8_t dawnOffsets[] = {5, 10, 15, 20, 25, 30, 40, 50, 60};// опции для выпадающего списка параметра "время перед 'рассветом'" (будильник); синхронизировано с android приложением
+static const uint8_t dawnOffsets[] PROGMEM = {5, 10, 15, 20, 25, 30, 40, 50, 60};   // опции для выпадающего списка параметра "время перед 'рассветом'" (будильник); синхронизировано с android приложением
 uint8_t dawnMode;
 bool dawnFlag = false;
 long thisTime;
@@ -127,7 +130,7 @@ bool manualOff = false;
 
 int8_t currentMode = 0;
 bool loadingFlag = true;
-bool ONflag = true;
+bool ONflag = false;
 uint32_t eepromTimeout;
 bool settChanged = false;
 
@@ -237,7 +240,7 @@ void setup()
   Udp.begin(localPort);
 
   EepromManager::InitEepromSettings(                        // инициализация EEPROM; запись начального состояния настроек, если их там ещё нет; инициализация настроек лампы значениями из EEPROM
-    modes, alarms, &dawnMode, &currentMode,
+    modes, alarms, &ONflag, &dawnMode, &currentMode,
     &(FavoritesManager::ReadFavoritesFromEeprom),
     &(FavoritesManager::SaveFavoritesToEeprom));
 
@@ -256,7 +259,8 @@ void loop()
 {
   parseUDP();
   effectsTick();
-  EepromManager::HandleEepromTick(&settChanged, &eepromTimeout, &currentMode, modes, &(FavoritesManager::SaveFavoritesToEeprom));
+  EepromManager::HandleEepromTick(&settChanged, &eepromTimeout, &ONflag, 
+  &currentMode, modes, &(FavoritesManager::SaveFavoritesToEeprom));
   #ifdef USE_NTP
   timeTick();
   #endif
@@ -266,7 +270,8 @@ void loop()
   #ifdef OTA
   otaManager.HandleOtaUpdate();                             // ожидание и обработка команды на обновление прошивки по воздуху
   #endif
-  TimerManager::HandleTimer(&ONflag, &changePower);         // обработка событий таймера отключения лампы
+  TimerManager::HandleTimer(&ONflag, &settChanged,          // обработка событий таймера отключения лампы
+    &eepromTimeout, &changePower);
   if (FavoritesManager::HandleFavorites(                    // обработка режима избранных эффектов
       &ONflag,
       &currentMode,

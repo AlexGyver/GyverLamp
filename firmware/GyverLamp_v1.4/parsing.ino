@@ -75,6 +75,8 @@ void parseUDP()
     {
       ONflag = true;
       loadingFlag = true;
+      settChanged = true;
+      eepromTimeout = millis();
       changePower();
       sendCurrent();
     }
@@ -82,6 +84,8 @@ void parseUDP()
     else if (!strncmp_P(inputBuffer, PSTR("P_OFF"), 5))
     {
       ONflag = false;
+      settChanged = true;
+      eepromTimeout = millis();
       changePower();
       sendCurrent();
     }

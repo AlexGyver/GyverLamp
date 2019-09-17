@@ -11,6 +11,8 @@ class TimerManager
 
     static void HandleTimer(                                // функция, обрабатывающая срабатывание таймера, гасит матрицу
       bool* ONflag,
+      bool* settChanged,
+      uint32_t* eepromTimeout,
       void (*changePower)())
     {
       if (!TimerManager::TimerHasFired &&

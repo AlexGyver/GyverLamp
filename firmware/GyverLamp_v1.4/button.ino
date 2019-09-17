@@ -19,6 +19,8 @@ void buttonTick()
       ONflag = !ONflag;
       changePower();
     }
+    settChanged = true;
+    eepromTimeout = millis();
     loadingFlag = true;
   }
 

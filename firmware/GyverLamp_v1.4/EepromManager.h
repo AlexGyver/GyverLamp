@@ -48,13 +48,14 @@
  *
  * 111-134   24       настройки режима избранных эффектов (интервал - 2 байта; разброс - 2 байта; вкл/выкл каждого эффекта - 20 (MODE_AMOUNT) байт; вкл/выкл не хранится в EEPROM)
  * 
+ * 197       1        состояние лампы (вкл/выкл)
  * 198       1        признак первого запуска (определяет необходимость первоначальной записи всех хранимых настроек)
  * 199       1        время до "рассвета" (dawnMode)
  * 200       1        текущий режим (currentMode)
  *
  * Не используются адреса:
  * 96-110    15       резерв, можно добавить ещё 5 эффектов
- * 135-197   63       если добавить ещё 10 эффектов, начальный адрес неиспользуемой памяти сдвинется с 135 на 145
+ * 135-196   62       если добавить ещё 10 эффектов, начальный адрес неиспользуемой памяти сдвинется с 135 на 145
 */
 
 #include <EEPROM.h>
@@ -63,6 +64,7 @@
 #define EEPROM_ALARM_START_ADDRESS           (0U)           // начальный адрес в EEPROM памяти для записи настроек будильников
 #define EEPROM_MODES_START_ADDRESS           (21U)          // начальный адрес в EEPROM памяти для записи настроек эффектов (яркость, скорость, масштаб)
 #define EEPROM_FAVORITES_START_ADDRESS       (111U)         // начальный адрес в EEPROM памяти для записи настроек режима избранных эффектов
+#define EEPROM_LAMP_ON_ADDRESS               (197U)         // адрес в EEPROM памяти для записи состояния лампы (вкл/выкл)
 #define EEPROM_FIRST_RUN_ADDRESS             (198U)         // адрес в EEPROM памяти для записи признака первого запуска (определяет необходимость первоначальной записи всех хранимых настроек)
 #define EEPROM_DAWN_MODE_ADDRESS             (199U)         // адрес в EEPROM памяти для записи времени до "рассвета"
 #define EEPROM_CURRENT_MODE_ADDRESS          (200U)         // адрес в EEPROM памяти для записи номера текущего эффекта лампы
@@ -77,7 +79,7 @@
 class EepromManager
 {
   public:
-    static void InitEepromSettings(ModeType modes[], AlarmType alarms[], uint8_t* dawnMode, int8_t* currentMode,
+    static void InitEepromSettings(ModeType modes[], AlarmType alarms[], bool* onFlag, uint8_t* dawnMode, int8_t* currentMode,
       void (*readFavoritesSettings)(), void (*saveFavoritesSettings)())
     {
       // записываем в EEPROM начальное состояние настроек, если их там ещё нет
@@ -102,6 +104,7 @@ class EepromManager
           EEPROM.commit();
         }
 
+        EEPROM.write(EEPROM_LAMP_ON_ADDRESS, 0);
         EEPROM.write(EEPROM_DAWN_MODE_ADDRESS, 0);
         EEPROM.write(EEPROM_CURRENT_MODE_ADDRESS, 0);
 
@@ -124,6 +127,7 @@ class EepromManager
 
       readFavoritesSettings();
 
+      *onFlag = (bool)EEPROM.read(EEPROM_LAMP_ON_ADDRESS);
       *dawnMode = EEPROM.read(EEPROM_DAWN_MODE_ADDRESS);
       *currentMode = EEPROM.read(EEPROM_CURRENT_MODE_ADDRESS);
     }
@@ -134,12 +138,13 @@ class EepromManager
       EEPROM.commit();
     }
     
-    static void HandleEepromTick(bool* settChanged, uint32_t* eepromTimeout, int8_t* currentMode, ModeType modes[], void (*saveFavoritesSettings)())
+    static void HandleEepromTick(bool* settChanged, uint32_t* eepromTimeout, bool* onFlag, int8_t* currentMode, ModeType modes[], void (*saveFavoritesSettings)())
     {
       if (*settChanged && millis() - *eepromTimeout > EEPROM_WRITE_DELAY)
       {
         *settChanged = false;
         *eepromTimeout = millis();
+        SaveOnFlag(onFlag);
         SaveModesSettings(currentMode, modes);
         if (EEPROM.read(EEPROM_CURRENT_MODE_ADDRESS) != *currentMode)
         {
@@ -154,6 +159,12 @@ class EepromManager
     {
       EEPROM.write(EEPROM_ALARM_START_ADDRESS + EEPROM_ALARM_STRUCT_SIZE * (*alarmNumber), alarms[*alarmNumber].State);
       WriteUint16(EEPROM_ALARM_START_ADDRESS + EEPROM_ALARM_STRUCT_SIZE * (*alarmNumber) + 1, alarms[*alarmNumber].Time);
+      EEPROM.commit();
+    }
+
+    static void SaveOnFlag(bool* onFlag)
+    {
+      EEPROM.write(EEPROM_LAMP_ON_ADDRESS, *onFlag);
       EEPROM.commit();
     }
 
