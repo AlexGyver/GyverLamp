@@ -30,6 +30,8 @@ class TimerManager
         FastLED.show();
         *ONflag = !(*ONflag);
         changePower();
+        *settChanged = true;
+        *eepromTimeout = millis();
       }
     }
 };
