@@ -51,7 +51,7 @@ uint8_t line[WIDTH];
 uint8_t pcnt = 0;
 
 //these values are substracetd from the generated values to give a shape to the animation
-const uint8_t valueMask[8][16] PROGMEM =
+static const uint8_t valueMask[8][16] PROGMEM =
 {
   {32 , 0  , 0  , 0  , 0  , 0  , 0  , 32 , 32 , 0  , 0  , 0  , 0  , 0  , 0  , 32 },
   {64 , 0  , 0  , 0  , 0  , 0  , 0  , 64 , 64 , 0  , 0  , 0  , 0  , 0  , 0  , 64 },
@@ -65,7 +65,7 @@ const uint8_t valueMask[8][16] PROGMEM =
 
 //these are the hues for the fire,
 //should be between 0 (red) to about 25 (yellow)
-const uint8_t hueMask[8][16] PROGMEM =
+static const uint8_t hueMask[8][16] PROGMEM =
 {
   {1 , 11, 19, 25, 25, 22, 11, 1 , 1 , 11, 19, 25, 25, 22, 11, 1 },
   {1 , 8 , 13, 19, 25, 19, 8 , 1 , 1 , 8 , 13, 19, 25, 19, 8 , 1 },
@@ -145,10 +145,10 @@ void drawFrame(uint8_t pcnt)
         nextv =
           (((100.0 - pcnt) * matrixValue[y][newX]
             + pcnt * matrixValue[y - 1][newX]) / 100.0)
-          - pgm_read_byte(&(valueMask[y][newX]));
+          - pgm_read_byte(&valueMask[y][newX]);
 
         CRGB color = CHSV(
-          modes[EFF_FIRE].Scale * 2.5 + pgm_read_byte(&(hueMask[y][newX])),          // H
+          modes[EFF_FIRE].Scale * 2.5 + pgm_read_byte(&hueMask[y][newX]),            // H
           255,                                                                       // S
           (uint8_t)max(0, nextv)                                                     // V
         );

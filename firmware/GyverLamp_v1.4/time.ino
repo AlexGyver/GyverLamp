@@ -47,20 +47,21 @@ void timeTick()
       {
         return;
       }
+
       byte thisDay = timeClient.getDay();
       if (thisDay == 0) thisDay = 7;                                      // воскресенье это 0
       thisDay--;
       thisTime = timeClient.getHours() * 60 + timeClient.getMinutes();
 
       // проверка рассвета
-      if (alarms[thisDay].State &&                                        // день будильника
-          thisTime >= (alarms[thisDay].Time - dawnOffsets[dawnMode]) &&   // позже начала
-          thisTime < (alarms[thisDay].Time + DAWN_TIMEOUT))               // раньше конца + минута
+      if (alarms[thisDay].State &&                                                            // день будильника
+          thisTime >= (alarms[thisDay].Time - pgm_read_byte(&dawnOffsets[dawnMode])) &&       // позже начала
+          thisTime < (alarms[thisDay].Time + DAWN_TIMEOUT))                                   // раньше конца + минута
       {
         if (!manualOff)                                                   // будильник не был выключен вручную (из приложения или кнопкой)
         {
           // величина рассвета 0-255
-          int32_t dawnPosition = 255 * ((float)(thisTime - (alarms[thisDay].Time - dawnOffsets[dawnMode])) / dawnOffsets[dawnMode]);
+          int32_t dawnPosition = 255 * ((float)(thisTime - (alarms[thisDay].Time - pgm_read_byte(&dawnOffsets[dawnMode]))) / pgm_read_byte(&dawnOffsets[dawnMode]));
           dawnPosition = constrain(dawnPosition, 0, 255);
           CHSV dawnColor = CHSV(map(dawnPosition, 0, 255, 10, 35),
                                 map(dawnPosition, 0, 255, 255, 170),
