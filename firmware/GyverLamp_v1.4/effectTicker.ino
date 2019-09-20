@@ -74,5 +74,8 @@ void changePower()
   TimerManager::TimerHasFired = false;
   TimerManager::TimeToFire = 0ULL;
 
-  FavoritesManager::TurnFavoritesOff();
+  if (FavoritesManager::UseSavedFavoritesRunning == 0)      // если выбрана опция Сохранять состояние (вкл/выкл) "избранного", то ни выключение модуля, ни выключение матрицы не сбрасывают текущее состояние (вкл/выкл) "избранного"
+  {
+      FavoritesManager::TurnFavoritesOff();
+  }
 }

@@ -62,6 +62,9 @@
   - Добавлено сохранение состояния (вкл/выкл) лампы в EEPROM память
   - Добавлен новый эффект белого света (с горизонтальной полосой)
   - Реорганизован код, исправлены ошибки
+  --- 20.09.2019
+  - Добавлена возможность сохранять состояние (вкл/выкл) режима "Избранное"; не сбрасывается выключением матрицы, не сбрасывается перезапуском модуля esp
+  - Убрана очистка параметров WiFi при старте с зажатой кнопкой; регулируется директивой ESP_RESET_ON_STASRT, которая определена как false по умолчанию
 */
 
 // Ссылка для менеджера плат:
@@ -141,9 +144,10 @@ bool TimerManager::TimerHasFired = false;
 uint8_t TimerManager::TimerOption = 1U;
 uint64_t TimerManager::TimeToFire = 0ULL;
 
-bool FavoritesManager::FavoritesRunning = false;
+uint8_t FavoritesManager::FavoritesRunning = 0;
 uint16_t FavoritesManager::Interval = DEFAULT_FAVORITES_INTERVAL;
 uint16_t FavoritesManager::Dispersion = DEFAULT_FAVORITES_DISPERSION;
+uint8_t FavoritesManager::UseSavedFavoritesRunning = 0;
 uint8_t FavoritesManager::FavoriteModes[MODE_AMOUNT] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
 uint32_t FavoritesManager::nextModeAt = 0UL;
 
@@ -156,11 +160,11 @@ void setup()
   ESP.wdtDisable();
   //ESP.wdtEnable(WDTO_8S);
 
-  #ifdef ESP_USE_BUTTON
+  #ifdef ESP_USE_BUTTON && ESP_RESET_ON_STASRT
   touch.setStepTimeout(100);
   touch.setClickTimeout(500);
   buttonTick();
-  if (touch.state())                                        // сброс сохранённых SSID и пароля при старте с зажатой кнопкой
+  if (touch.state())                                        // сброс сохранённых SSID и пароля при старте с зажатой кнопкой, если разрешено
   {
     wifiManager.resetSettings();
 
