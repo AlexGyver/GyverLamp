@@ -4,8 +4,9 @@ bool brightDirection;
 void buttonTick()
 {
   touch.tick();
+  uint8_t clickCount = touch.hasClicks() ? touch.getClicks() : 0;
 
-  if (touch.isSingle())
+  if (clickCount == 1)
   {
     if (dawnFlag)
     {
@@ -24,7 +25,7 @@ void buttonTick()
     loadingFlag = true;
   }
 
-  if (ONflag && touch.isDouble())
+  if (ONflag && clickCount == 2)
   {
     if (++currentMode >= MODE_AMOUNT) currentMode = 0;
     FastLED.setBrightness(modes[currentMode].Brightness);
@@ -35,7 +36,7 @@ void buttonTick()
     delay(1);
   }
 
-  if (ONflag && touch.isTriple())
+  if (ONflag && clickCount == 3)
   {
     if (--currentMode < 0) currentMode = MODE_AMOUNT - 1;
     FastLED.setBrightness(modes[currentMode].Brightness);
@@ -46,7 +47,7 @@ void buttonTick()
     delay(1);
   }
 
-  if (ONflag && touch.hasClicks() && touch.getClicks() >= 4)
+  if (ONflag && clickCount == 4)
   {
     #ifdef OTA
     if (otaManager.RequestOtaUpdate())
@@ -57,6 +58,14 @@ void buttonTick()
     }
     #endif
   }
+
+  if (ONflag && clickCount == 5)                            // вывод IP на лампу
+  {
+    if (ESP_MODE == 1U)
+    {
+      while(!fillString(WiFi.localIP().toString().c_str())) delay(1);
+    }
+  }  
 
   if (ONflag && touch.isHolded())
   {

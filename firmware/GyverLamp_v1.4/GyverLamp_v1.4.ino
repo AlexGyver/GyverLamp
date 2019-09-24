@@ -65,6 +65,8 @@
   --- 20.09.2019
   - Добавлена возможность сохранять состояние (вкл/выкл) режима "Избранное"; не сбрасывается выключением матрицы, не сбрасывается перезапуском модуля esp
   - Убрана очистка параметров WiFi при старте с зажатой кнопкой; регулируется директивой ESP_RESET_ON_STASRT, которая определена как false по умолчанию
+  --- 24.09.2019
+  - Добавлены изменения из прошивка от Alex Gyver v1.5: бегущая строка с IP адресом лампы по пятикратному клику на кнопку
 */
 
 // Ссылка для менеджера плат:
@@ -84,6 +86,7 @@
 #ifdef ESP_USE_BUTTON
 #include <GyverButton.h>
 #endif
+#include "fonts.h"
 #ifdef USE_NTP
 #include <NTPClient.h>
 #endif
@@ -160,7 +163,7 @@ void setup()
   ESP.wdtDisable();
   //ESP.wdtEnable(WDTO_8S);
 
-  #ifdef ESP_USE_BUTTON && ESP_RESET_ON_STASRT
+  #if defined(ESP_USE_BUTTON) && ESP_RESET_ON_STASRT
   touch.setStepTimeout(100);
   touch.setClickTimeout(500);
   buttonTick();
