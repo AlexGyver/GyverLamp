@@ -63,7 +63,9 @@ void buttonTick()
   {
     if (ESP_MODE == 1U)
     {
+      loadingFlag = true;
       while(!fillString(WiFi.localIP().toString().c_str())) delay(1);
+      loadingFlag = true;
     }
   }  
 
