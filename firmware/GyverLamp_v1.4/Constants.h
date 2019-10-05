@@ -94,7 +94,7 @@ const uint8_t AP_STATIC_IP[] = {192, 168, 4, 1};            // статичес�
 //#define MAX_UDP_BUFFER_SIZE (UDP_TX_PACKET_MAX_SIZE + 1)
 #define MAX_UDP_BUFFER_SIZE   (129U)                        // максимальный размер буффера UDP сервера
 
-#define GENERAL_DEBUG_TELNET  (true)                       // true - отладочные сообщения будут выводиться в telnet вместо Serial порта (для удалённой отладки без подключения usb кабелем)
+#define GENERAL_DEBUG_TELNET  (false)                       // true - отладочные сообщения будут выводиться в telnet вместо Serial порта (для удалённой отладки без подключения usb кабелем)
 #define TELNET_PORT           (23U)                         // номер telnet порта
 
 #if defined(GENERAL_DEBUG) && GENERAL_DEBUG_TELNET
