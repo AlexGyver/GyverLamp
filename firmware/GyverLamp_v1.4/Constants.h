@@ -1,5 +1,7 @@
 #pragma once
 
+#include <ESP8266WebServer.h>
+
 
 // ============= НАСТРОЙКИ =============
 // --- ESP -----------------------------
@@ -33,6 +35,12 @@ const uint8_t AP_STATIC_IP[] = {192, 168, 4, 1};            // статичес�
 #define GMT                   (3)                           // часовой пояс (москва 3)
 #define NTP_ADDRESS           ("ntp2.colocall.net")         // сервер времени
 #define NTP_INTERVAL          (30UL * 60UL * 1000UL)        // интервал синхронизации времени (30 минут)
+
+// --- ВНЕШНЕЕ УПРАВЛЕНИЕ --------------
+#define USE_MQTT              (true)                        // true - используется mqtt клиент, false - нет
+#if USE_MQTT
+#define MQTT_RECONNECT_TIME   (10U)                         // время в секундах перед подключением к MQTT брокеру в случае потери подключения
+#endif
 
 // --- РАССВЕТ -------------------------
 #define DAWN_BRIGHT           (200U)                        // максимальная яркость рассвета (0-255)
@@ -85,6 +93,18 @@ const uint8_t AP_STATIC_IP[] = {192, 168, 4, 1};            // статичес�
 
 //#define MAX_UDP_BUFFER_SIZE (UDP_TX_PACKET_MAX_SIZE + 1)
 #define MAX_UDP_BUFFER_SIZE   (129U)                        // максимальный размер буффера UDP сервера
+
+#define GENERAL_DEBUG_TELNET  (true)                       // true - отладочные сообщения будут выводиться в telnet вместо Serial порта (для удалённой отладки без подключения usb кабелем)
+#define TELNET_PORT           (23U)                         // номер telnet порта
+
+#if defined(GENERAL_DEBUG) && GENERAL_DEBUG_TELNET
+WiFiServer telnetServer(TELNET_PORT);                       // telnet сервер
+WiFiClient telnet;                                          // обработчик событий telnet клиента
+bool telnetGreetingShown = false;                           // признак "показано приветствие в telnet"
+#define LOG                   telnet
+#else
+#define LOG                   Serial
+#endif
 
 // --- БИБЛИОТЕКИ ----------------------
 #define FASTLED_INTERRUPT_RETRY_COUNT   (0U)

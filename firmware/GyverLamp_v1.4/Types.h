@@ -13,3 +13,5 @@ struct ModeType
   uint8_t Speed = 30;
   uint8_t Scale = 40;
 };
+
+typedef void (*SendCurrentDelegate)(char *outputBuffer);

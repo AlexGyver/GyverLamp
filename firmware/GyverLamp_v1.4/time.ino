@@ -32,7 +32,7 @@ void timeTick()
           if (!ntpServerAddressResolved)
           {
             #ifdef GENERAL_DEBUG
-            Serial.println(F("Функции будильника отключены до восстановления подключения к интернету"));
+            LOG.println(F("Функции будильника отключены до восстановления подключения к интернету"));
             #endif
           }
         }
@@ -60,6 +60,7 @@ void timeTick()
       {
         if (!manualOff)                                                   // будильник не был выключен вручную (из приложения или кнопкой)
         {
+          LOG.println("Будильник включен");
           // величина рассвета 0-255
           int32_t dawnPosition = 255 * ((float)(thisTime - (alarms[thisDay].Time - pgm_read_byte(&dawnOffsets[dawnMode]))) / pgm_read_byte(&dawnOffsets[dawnMode]));
           dawnPosition = constrain(dawnPosition, 0, 255);
@@ -75,15 +76,16 @@ void timeTick()
       }
       else
       {
+        // не время будильника (ещё не начался или закончился по времени)
         if (dawnFlag)
         {
           dawnFlag = false;
-          manualOff = false;
           FastLED.clear();
           delay(2);
           FastLED.show();
           changePower();                                                  // выключение матрицы или установка яркости текущего эффекта в засисимости от того, была ли включена лампа до срабатывания будильника
         }
+        manualOff = false;
       }
     }
   }
@@ -102,7 +104,7 @@ void resolveNtpServerAddress(bool &ntpServerAddressResolved)              // ф�
     #ifdef GENERAL_DEBUG
     if (ntpServerAddressResolved)
     {
-      Serial.println(F("Подключение к интернету отсутствует"));
+      LOG.println(F("Подключение к интернету отсутствует"));
     }
     #endif
 
@@ -113,7 +115,7 @@ void resolveNtpServerAddress(bool &ntpServerAddressResolved)              // ф�
     #ifdef GENERAL_DEBUG
     if (!ntpServerAddressResolved)
     {
-      Serial.println(F("Подключение к интернету установлено"));
+      LOG.println(F("Подключение к интернету установлено"));
     }
     #endif
 

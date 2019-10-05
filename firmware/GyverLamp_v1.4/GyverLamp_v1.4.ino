@@ -16,8 +16,8 @@
   - Добавлено "#define USE_NTP" - позволяет запретить обращаться в интернет
   - Добавлено "#define ESP_USE_BUTTON - позволяет собирать лампу без физической кнопки, иначе яркость эффектов самопроизвольно растёт до максимальной
   - Переработаны параметры IP адресов, STA_STATIC_IP теперь пустой по умолчанию - избавляет от путаницы с IP адресами из неправильных диапазонов
-  - Добавлено "#define GENERAL_DEBUG" - выводит в Serial некоторые отладочные сообщения
-  - Добавлено "#define WIFIMAN_DEBUG (true)" - выводит в Serial отладочные сообщения библиотеки WiFiManager
+  - Добавлено "#define GENERAL_DEBUG" - выводит в Serial/Telnet некоторые отладочные сообщения
+  - Добавлено "#define WIFIMAN_DEBUG (true)" - выводит в Serial/Telnet отладочные сообщения библиотеки WiFiManager
   - Добавлена таблица с тест кейсами
   - Форматирование кода, комментарии
   --- 11.07.2019
@@ -67,6 +67,13 @@
   - Убрана очистка параметров WiFi при старте с зажатой кнопкой; регулируется директивой ESP_RESET_ON_STASRT, которая определена как false по умолчанию
   --- 24.09.2019
   - Добавлены изменения из прошивка от Alex Gyver v1.5: бегущая строка с IP адресом лампы по пятикратному клику на кнопку
+  --- 29.09.2019
+  - Добавлена опция вывода отладочных сообщений по пртоколу telnet вместо serial для удалённой отладки
+  - Исправлена ошибка регулировки яркости кнопкой
+  --- 05.10.2019
+  - Добавлено управление по протоколу MQTT
+  - Исправлена ошибка выключения будильника кнопкой
+  - Добавлена задержка в 1 секунду сразу после старта, в течение которой нужно нажать кнопку, чтобы очистить сохранённые параметры WiFi (если ESP_RESET_ON_STASRT == true)
 */
 
 // Ссылка для менеджера плат:
@@ -93,6 +100,9 @@
 #ifdef OTA
 #include "OtaManager.h"
 #endif
+#if USE_MQTT
+#include "MqttManager.h"
+#endif
 #include "TimerManager.h"
 #include "FavoritesManager.h"
 #include "EepromManager.h"
@@ -114,9 +124,26 @@ timerMinim timeTimer(3000);
 #ifdef ESP_USE_BUTTON
 GButton touch(BTN_PIN, LOW_PULL, NORM_OPEN);
 #endif
+
 #ifdef OTA
 OtaManager otaManager;
 OtaPhase OtaManager::OtaFlag = OtaPhase::None;
+#endif
+
+#if USE_MQTT
+AsyncMqttClient* mqttClient = NULL;
+AsyncMqttClient* MqttManager::mqttClient = NULL;
+char* MqttManager::mqttServer = NULL;
+char* MqttManager::mqttUser = NULL;
+char* MqttManager::mqttPassword = NULL;
+char* MqttManager::clientId = NULL;
+char* MqttManager::topicInput = NULL;
+char* MqttManager::topicOutput = NULL;
+bool MqttManager::needToPublish = false;
+char MqttManager::mqttBuffer[] = {};
+uint32_t MqttManager::mqttLastConnectingAttempt = 0;
+SendCurrentDelegate MqttManager::sendCurrentDelegate = NULL;
+// volatile uint32_t wifiLastConnectingAttempt = 0;
 #endif
 
 // --- ИНИЦИАЛИЗАЦИЯ ПЕРЕМЕННЫХ -------
@@ -160,29 +187,46 @@ void setup()
   Serial.begin(115200);
   Serial.println();
 
-  ESP.wdtDisable();
-  //ESP.wdtEnable(WDTO_8S);
 
-  #if defined(ESP_USE_BUTTON) && ESP_RESET_ON_STASRT
-  touch.setStepTimeout(100);
-  touch.setClickTimeout(500);
-  buttonTick();
-  if (touch.state())                                        // сброс сохранённых SSID и пароля при старте с зажатой кнопкой, если разрешено
+  // TELNET
+  #if defined(GENERAL_DEBUG) && GENERAL_DEBUG_TELNET
+  telnetServer.begin();
+  for (uint8_t i = 0; i < 100; i++)                         // пауза 10 секунд в отладочном режиме, чтобы успеть подключиться по протоколу telnet до вывода первых сообщений
   {
-    wifiManager.resetSettings();
-
-    #ifdef GENERAL_DEBUG
-    Serial.println(F("Настройки WiFiManager сброшены"));
-    #endif
+    handleTelnetClient();
+    delay(100);
   }
   #endif
 
-  // ЛЕНТА
+  ESP.wdtDisable();
+  //ESP.wdtEnable(WDTO_8S);
+
+
+  // КНОПКА
+  #if defined(ESP_USE_BUTTON)
+  touch.setStepTimeout(100);
+  touch.setClickTimeout(500);
+    #if ESP_RESET_ON_STASRT
+    delay(1000);                                            // ожидание инициализации модуля кнопки ttp223 (по спецификации 250мс)
+    if (digitalRead(BTN_PIN))
+    {
+      wifiManager.resetSettings();                          // сброс сохранённых SSID и пароля при старте с зажатой кнопкой, если разрешено
+
+      #ifdef GENERAL_DEBUG
+      LOG.println(F("Настройки WiFiManager сброшены"));
+      #endif
+    }
+    #endif
+  #endif
+
+
+  // ЛЕНТА/МАТРИЦА
   FastLED.addLeds<WS2812B, LED_PIN, COLOR_ORDER>(leds, NUM_LEDS)/*.setCorrection(TypicalLEDStrip)*/;
   FastLED.setBrightness(BRIGHTNESS);
   if (CURRENT_LIMIT > 0) FastLED.setMaxPowerInVoltsAndMilliamps(5, CURRENT_LIMIT);
   FastLED.clear();
   FastLED.show();
+
 
   // WI-FI
   wifiManager.setDebugOutput(WIFIMAN_DEBUG);                // вывод отладочных сообщений
@@ -197,23 +241,23 @@ void setup()
 
     WiFi.softAP(AP_NAME, AP_PASS);
 
-    Serial.println(F("Режим WiFi точки доступа"));
-    Serial.print(F("IP адрес: "));
-    Serial.println(WiFi.softAPIP());
+    LOG.println(F("Режим WiFi точки доступа"));
+    LOG.print(F("IP адрес: "));
+    LOG.println(WiFi.softAPIP());
 
     wifiServer.begin();
   }
   else                                                      // режим WiFi клиента (подключаемся к роутеру, если есть сохранённые SSID и пароль, иначе создаём WiFi точку доступа и запрашиваем их)
   {
-    Serial.println(F("Режим WiFi клиента"));
+    LOG.println(F("Режим WiFi клиента"));
     if (WiFi.SSID())
     {
-      Serial.print(F("Подключение WiFi сети: "));
-      Serial.println(WiFi.SSID());
+      LOG.print(F("Подключение WiFi сети: "));
+      LOG.println(WiFi.SSID());
     }
     else
     {
-      Serial.println(F("WiFi сеть не определена, запуск WiFi точки доступа для настройки параметров подключения к WiFi сети..."));
+      LOG.println(F("WiFi сеть не определена, запуск WiFi точки доступа для настройки параметров подключения к WiFi сети..."));
     }
 
     if (STA_STATIC_IP)
@@ -230,7 +274,7 @@ void setup()
 
     if (WiFi.status() != WL_CONNECTED)
     {
-      Serial.println(F("Время ожидания ввода SSID и пароля от WiFi сети или подключения к WiFi сети превышено\nПерезагрузка модуля"));
+      LOG.println(F("Время ожидания ввода SSID и пароля от WiFi сети или подключения к WiFi сети превышено\nПерезагрузка модуля"));
 
       #if defined(ESP8266)
       ESP.reset();
@@ -239,22 +283,35 @@ void setup()
       #endif
     }
 
-    Serial.print(F("IP адрес: "));
-    Serial.println(WiFi.localIP());
+    LOG.print(F("IP адрес: "));
+    LOG.println(WiFi.localIP());
   }
 
-  Serial.printf_P(PSTR("Порт UDP сервера: %u\n"), localPort);
+  LOG.printf_P(PSTR("Порт UDP сервера: %u\n"), localPort);
   Udp.begin(localPort);
 
+
+  // EEPROM
   EepromManager::InitEepromSettings(                        // инициализация EEPROM; запись начального состояния настроек, если их там ещё нет; инициализация настроек лампы значениями из EEPROM
     modes, alarms, &ONflag, &dawnMode, &currentMode,
     &(FavoritesManager::ReadFavoritesFromEeprom),
     &(FavoritesManager::SaveFavoritesToEeprom));
 
+
+  // NTP
   #ifdef USE_NTP
   timeClient.begin();
   #endif
 
+
+  // MQTT
+  #if (USE_MQTT && ESP_MODE == 1)
+  mqttClient = new AsyncMqttClient();
+  MqttManager::setupMqtt(mqttClient, &sendCurrent);         // создание экземпляров объектов для работы с MQTT, их инициализация и подключение к MQTT брокеру
+  #endif
+
+
+  // ОСТАЛЬНОЕ
   memset(matrixValue, 0, sizeof(matrixValue));
   randomSeed(micros());
   changePower();
@@ -266,19 +323,25 @@ void loop()
 {
   parseUDP();
   effectsTick();
+
   EepromManager::HandleEepromTick(&settChanged, &eepromTimeout, &ONflag, 
-  &currentMode, modes, &(FavoritesManager::SaveFavoritesToEeprom));
+    &currentMode, modes, &(FavoritesManager::SaveFavoritesToEeprom));
+
   #ifdef USE_NTP
   timeTick();
   #endif
+
   #ifdef ESP_USE_BUTTON
   buttonTick();
   #endif
+
   #ifdef OTA
   otaManager.HandleOtaUpdate();                             // ожидание и обработка команды на обновление прошивки по воздуху
   #endif
+
   TimerManager::HandleTimer(&ONflag, &settChanged,          // обработка событий таймера отключения лампы
     &eepromTimeout, &changePower);
+
   if (FavoritesManager::HandleFavorites(                    // обработка режима избранных эффектов
       &ONflag,
       &currentMode,
@@ -292,6 +355,29 @@ void loop()
     FastLED.clear();
     delay(1);
   }
+
+  #if USE_MQTT
+  if (ESP_MODE == 1 && mqttClient && WiFi.isConnected() && !mqttClient->connected())
+  {
+    MqttManager::mqttConnect();                             // библиотека не умеет восстанавливать соединение в случае потери подключения к MQTT брокеру, нужно управлять этим явно
+    MqttManager::needToPublish = true;
+  }
+
+  if (MqttManager::needToPublish)
+  {
+    if (strlen(inputBuffer) > 0)                            // проверка входящего MQTT сообщения; если оно не пустое - выполнение команды из него и формирование MQTT ответа
+    {
+      processInputBuffer(inputBuffer, MqttManager::mqttBuffer, true);
+    }
+    
+    MqttManager::publishState();
+  }
+  #endif
+
+  #if defined(GENERAL_DEBUG) && GENERAL_DEBUG_TELNET
+  handleTelnetClient();
+  #endif
+
   ESP.wdtFeed();                                            // пнуть собаку
   yield();                                                  // обработать все "служебные" задачи: wdt, WiFi подключение и т.д. (?)
 }

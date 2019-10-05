@@ -1,6 +1,7 @@
 #pragma once
 #include <EEPROM.h>
 #include "EepromManager.h"
+#include "Constants.h"
 
 #define DEFAULT_FAVORITES_INTERVAL           (300U)         // значение по умолчанию для интервала переключения избпранных эффектов в секундах
 #define DEFAULT_FAVORITES_DISPERSION         (0U)           // значение по умолчанию для разброса интервала переключения избпранных эффектов в секундах
@@ -99,7 +100,7 @@ class FavoritesManager
         nextModeAt = getNextTime();
 
         #ifdef GENERAL_DEBUG
-        Serial.printf_P(PSTR("Переключение на следующий избранный режим: %d\n\n"), (*currentMode));
+        LOG.printf_P(PSTR("Переключение на следующий избранный режим: %d\n\n"), (*currentMode));
         #endif
 
         return true;

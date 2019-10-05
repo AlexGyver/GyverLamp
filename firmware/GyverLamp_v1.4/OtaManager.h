@@ -38,7 +38,7 @@ class OtaManager
       if (ESP_MODE != 1)
       {
         #ifdef GENERAL_DEBUG
-        Serial.print(F("Запрос обновления по воздуху поддерживается только в режиме ESP_MODE = 1\n"));
+        LOG.print(F("Запрос обновления по воздуху поддерживается только в режиме ESP_MODE = 1\n"));
         #endif
 
         return false;
@@ -50,7 +50,7 @@ class OtaManager
         momentOfFirstConfirmation = millis();
 
         #ifdef GENERAL_DEBUG
-        Serial.print(F("Получено первое подтверждение обновления по воздуху\nОжидание второго подтверждения\n"));
+        LOG.print(F("Получено первое подтверждение обновления по воздуху\nОжидание второго подтверждения\n"));
         #endif
 
         return false;
@@ -61,7 +61,7 @@ class OtaManager
         OtaFlag = OtaPhase::GotSecondConfirm;
 
         #ifdef GENERAL_DEBUG
-        Serial.print(F("Получено второе подтверждение обновления по воздуху\nСтарт режима обновления\n"));
+        LOG.print(F("Получено второе подтверждение обновления по воздуху\nСтарт режима обновления\n"));
         #endif
 
         startOtaUpdate();
@@ -80,7 +80,7 @@ class OtaManager
         momentOfFirstConfirmation = 0;
 
         #ifdef GENERAL_DEBUG
-        Serial.print(F("Таймаут ожидания второго подтверждения превышен\nСброс флага в исходное состояние\n"));
+        LOG.print(F("Таймаут ожидания второго подтверждения превышен\nСброс флага в исходное состояние\n"));
         #endif
 
         return;
@@ -93,7 +93,7 @@ class OtaManager
         momentOfOtaStart = 0;
 
         #ifdef GENERAL_DEBUG
-        Serial.print(F("Таймаут ожидания прошивки по воздуху превышен\nСброс флага в исходное состояние\nПерезагрузка\n"));
+        LOG.print(F("Таймаут ожидания прошивки по воздуху превышен\nСброс флага в исходное состояние\nПерезагрузка\n"));
         delay(500);
         #endif
 
@@ -139,7 +139,7 @@ class OtaManager
         // NOTE: if updating SPIFFS this would be the place to unmount SPIFFS using SPIFFS.end()
 
         #ifdef GENERAL_DEBUG
-        Serial.printf_P(PSTR("Start updating %s\n"), type.c_str());
+        LOG.printf_P(PSTR("Start updating %s\n"), type.c_str());
         #endif
       });
 
@@ -148,7 +148,7 @@ class OtaManager
         OtaFlag = OtaPhase::Done;
 
         #ifdef GENERAL_DEBUG
-        Serial.print(F("Обновление по воздуху выполнено\nПерезапуск"));
+        LOG.print(F("Обновление по воздуху выполнено\nПерезапуск"));
         delay(500);
         #endif
       });
@@ -156,7 +156,7 @@ class OtaManager
       ArduinoOTA.onProgress([](unsigned int progress, unsigned int total)
       {
         #ifdef GENERAL_DEBUG
-        Serial.printf_P(PSTR("Ход выполнения: %u%%\r"), (progress / (total / 100)));
+        LOG.printf_P(PSTR("Ход выполнения: %u%%\r"), (progress / (total / 100)));
         #endif
       });
 
@@ -165,42 +165,42 @@ class OtaManager
         OtaFlag = OtaPhase::None;
 
         #ifdef GENERAL_DEBUG
-        Serial.printf_P(PSTR("Обновление по воздуху завершилось ошибкой [%u]: "), error);
+        LOG.printf_P(PSTR("Обновление по воздуху завершилось ошибкой [%u]: "), error);
         #endif
 
         if (error == OTA_AUTH_ERROR)
         {
           #ifdef GENERAL_DEBUG
-          Serial.println(F("Auth Failed"));
+          LOG.println(F("Auth Failed"));
           #endif
         }
         else if (error == OTA_BEGIN_ERROR)
         {
           #ifdef GENERAL_DEBUG
-          Serial.println(F("Begin Failed"));
+          LOG.println(F("Begin Failed"));
           #endif
         }
         else if (error == OTA_CONNECT_ERROR)
         {
           #ifdef GENERAL_DEBUG
-          Serial.println(F("Connect Failed"));
+          LOG.println(F("Connect Failed"));
           #endif
         }
         else if (error == OTA_RECEIVE_ERROR)
         {
           #ifdef GENERAL_DEBUG
-          Serial.println(F("Receive Failed"));
+          LOG.println(F("Receive Failed"));
           #endif
         }
         else if (error == OTA_END_ERROR)
         {
           #ifdef GENERAL_DEBUG
-          Serial.println(F("End Failed"));
+          LOG.println(F("End Failed"));
           #endif
         }
 
         #ifdef GENERAL_DEBUG
-        Serial.print(F("Сброс флага в исходное состояние\nПереход в режим ожидания запроса прошивки по воздуху\n"));
+        LOG.print(F("Сброс флага в исходное состояние\nПереход в режим ожидания запроса прошивки по воздуху\n"));
         #endif
       });
 
@@ -211,11 +211,11 @@ class OtaManager
       momentOfOtaStart = 0;
 
       #ifdef GENERAL_DEBUG
-      Serial.printf_P(PSTR("Для обновления в Arduino IDE выберите пункт меню Инструменты - Порт - '%s at "), espHostName);
-      Serial.print(WiFi.localIP());
-      Serial.println(F("'"));
-      Serial.printf_P(PSTR("Затем нажмите кнопку 'Загрузка' в течение %u секунд и по запросу введите пароль '%s'\n"), ESP_CONF_TIMEOUT, AP_PASS);
-      Serial.println(F("Устройство с Arduino IDE должно быть в одной локальной сети с модулем ESP!"));
+      LOG.printf_P(PSTR("Для обновления в Arduino IDE выберите пункт меню Инструменты - Порт - '%s at "), espHostName);
+      LOG.print(WiFi.localIP());
+      LOG.println(F("'"));
+      LOG.printf_P(PSTR("Затем нажмите кнопку 'Загрузка' в течение %u секунд и по запросу введите пароль '%s'\n"), ESP_CONF_TIMEOUT, AP_PASS);
+      LOG.println(F("Устройство с Arduino IDE должно быть в одной локальной сети с модулем ESP!"));
       #endif
     }
 };

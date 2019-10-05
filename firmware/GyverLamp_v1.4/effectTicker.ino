@@ -78,4 +78,8 @@ void changePower()
   {
       FavoritesManager::TurnFavoritesOff();
   }
+
+  #if (USE_MQTT && ESP_MODE == 1)
+  MqttManager::needToPublish = true;
+  #endif
 }
