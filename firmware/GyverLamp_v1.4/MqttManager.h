@@ -68,7 +68,7 @@ class MqttManager
 {
   public:
     static uint32_t mqttLastConnectingAttempt;
-    static void setupMqtt(AsyncMqttClient* mqttClient, SendCurrentDelegate sendCurrentDelegate);
+    static void setupMqtt(AsyncMqttClient* mqttClient, char* lampInputBuffer, SendCurrentDelegate sendCurrentDelegate);
     static void mqttConnect();
     static void onMqttConnect(bool sessionPresent);
     static void onMqttDisconnect(AsyncMqttClientDisconnectReason reason);
@@ -84,6 +84,7 @@ class MqttManager
     static char* topicInput;                                                    // TopicBase + '/' + MqttClientIdPrefix + ESP.getChipId + '/' + TopicCmnd
     static char* topicOutput;                                                   // TopicBase + '/' + MqttClientIdPrefix + ESP.getChipId + '/' + TopicState
     static char* clientId;
+    static char* lampInputBuffer;                                               // ссылка на inputBuffer для записи в него пришедшей MQTT команды и последующей её обработки лампой
     static AsyncMqttClient* mqttClient;
     static const uint8_t qos = 0U;                                              // MQTT quality of service
     static const uint32_t connectionTimeout = MQTT_RECONNECT_TIME * 1000U;      // период времени для проверки (пере)подключения к MQTT брокеру, 10 секунд
@@ -94,13 +95,14 @@ class MqttManager
 };
 
 
-void MqttManager::setupMqtt(AsyncMqttClient* mqttClient, SendCurrentDelegate sendCurrentDelegate)
+void MqttManager::setupMqtt(AsyncMqttClient* mqttClient, char* lampInputBuffer, SendCurrentDelegate sendCurrentDelegate)
 {
   allocStr_P(&MqttManager::mqttServer, MqttServer);
   allocStr_P(&MqttManager::mqttUser, MqttUser);
   allocStr_P(&MqttManager::mqttPassword, MqttPassword);
 
   MqttManager::mqttClient = mqttClient;
+  MqttManager::lampInputBuffer = lampInputBuffer;
   MqttManager::sendCurrentDelegate = sendCurrentDelegate;
   MqttManager::mqttClient->setServer(MqttManager::mqttServer, MqttPort);
 
@@ -195,8 +197,9 @@ void MqttManager::onMqttMessage(char* topic, char* payload, AsyncMqttClientMessa
 {
   if (payload != NULL)                                      // сохраняем пришедшее MQTT сообщение для дальнейшей обработки
   {
-    strncpy(mqttBuffer, payload, len);
-    mqttBuffer[len] = '\0';
+    strncpy(lampInputBuffer, payload, len);
+    lampInputBuffer[len] = '\0';
+    needToPublish = true;
   }
 
   #ifdef GENERAL_DEBUG
@@ -219,7 +222,7 @@ void MqttManager::onMqttMessage(char* topic, char* payload, AsyncMqttClientMessa
   LOG.println(total);
   */
   LOG.print(F(", значение \""));
-  LOG.print(mqttBuffer);
+  LOG.print(lampInputBuffer);
   LOG.println("\"");
   LOG.println();
   #endif

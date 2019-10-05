@@ -137,6 +137,7 @@ char* MqttManager::mqttServer = NULL;
 char* MqttManager::mqttUser = NULL;
 char* MqttManager::mqttPassword = NULL;
 char* MqttManager::clientId = NULL;
+char* MqttManager::lampInputBuffer = NULL;
 char* MqttManager::topicInput = NULL;
 char* MqttManager::topicOutput = NULL;
 bool MqttManager::needToPublish = false;
@@ -307,7 +308,7 @@ void setup()
   // MQTT
   #if (USE_MQTT && ESP_MODE == 1)
   mqttClient = new AsyncMqttClient();
-  MqttManager::setupMqtt(mqttClient, &sendCurrent);         // создание экземпляров объектов для работы с MQTT, их инициализация и подключение к MQTT брокеру
+  MqttManager::setupMqtt(mqttClient, inputBuffer, &sendCurrent);      // создание экземпляров объектов для работы с MQTT, их инициализация и подключение к MQTT брокеру
   #endif
 
 
