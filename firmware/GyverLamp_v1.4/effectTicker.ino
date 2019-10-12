@@ -46,7 +46,7 @@ void changePower()
   if (ONflag)
   {
     effectsTick();
-    for (uint8_t i = 0; i < modes[currentMode].Brightness; i = constrain(i + 8, 0, modes[currentMode].Brightness))
+    for (uint8_t i = 0U; i < modes[currentMode].Brightness; i = constrain(i + 8, 0, modes[currentMode].Brightness))
     {
       FastLED.setBrightness(i);
       delay(1);
@@ -74,12 +74,15 @@ void changePower()
   TimerManager::TimerHasFired = false;
   TimerManager::TimeToFire = 0ULL;
 
-  if (FavoritesManager::UseSavedFavoritesRunning == 0)      // если выбрана опция Сохранять состояние (вкл/выкл) "избранного", то ни выключение модуля, ни выключение матрицы не сбрасывают текущее состояние (вкл/выкл) "избранного"
+  if (FavoritesManager::UseSavedFavoritesRunning == 0U)     // если выбрана опция Сохранять состояние (вкл/выкл) "избранного", то ни выключение модуля, ни выключение матрицы не сбрасывают текущее состояние (вкл/выкл) "избранного"
   {
       FavoritesManager::TurnFavoritesOff();
   }
 
-  #if (USE_MQTT && ESP_MODE == 1)
-  MqttManager::needToPublish = true;
+  #if (USE_MQTT)
+  if (espMode == 1U)
+  {
+    MqttManager::needToPublish = true;
+  }
   #endif
 }

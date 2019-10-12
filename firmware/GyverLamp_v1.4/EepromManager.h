@@ -55,7 +55,7 @@
  *
  * Не используются адреса:
  * 96-110    15       резерв, можно добавить ещё 5 эффектов
- * 142-196   55       если добавить ещё 5 эффектов, начальный адрес неиспользуемой памяти сдвинется с 142 на 147
+ * 142-195   54       если добавить ещё 5 эффектов, начальный адрес неиспользуемой памяти сдвинется с 142 на 147
 */
 
 #include <EEPROM.h>
@@ -64,6 +64,7 @@
 #define EEPROM_ALARM_START_ADDRESS           (0U)           // начальный адрес в EEPROM памяти для записи настроек будильников
 #define EEPROM_MODES_START_ADDRESS           (21U)          // начальный адрес в EEPROM памяти для записи настроек эффектов (яркость, скорость, масштаб)
 #define EEPROM_FAVORITES_START_ADDRESS       (111U)         // начальный адрес в EEPROM памяти для записи настроек режима избранных эффектов
+#define EEPROM_ESP_MODE                      (196U)         // адрес в EEPROM памяти для записи режима работы модуля ESP (точка доступа/WiFi клиент)
 #define EEPROM_LAMP_ON_ADDRESS               (197U)         // адрес в EEPROM памяти для записи состояния лампы (вкл/выкл)
 #define EEPROM_FIRST_RUN_ADDRESS             (198U)         // адрес в EEPROM памяти для записи признака первого запуска (определяет необходимость первоначальной записи всех хранимых настроек)
 #define EEPROM_DAWN_MODE_ADDRESS             (199U)         // адрес в EEPROM памяти для записи времени до "рассвета"
@@ -79,7 +80,7 @@
 class EepromManager
 {
   public:
-    static void InitEepromSettings(ModeType modes[], AlarmType alarms[], bool* onFlag, uint8_t* dawnMode, int8_t* currentMode,
+    static void InitEepromSettings(ModeType modes[], AlarmType alarms[], uint8_t* espMode, bool* onFlag, uint8_t* dawnMode, int8_t* currentMode,
       void (*readFavoritesSettings)(), void (*saveFavoritesSettings)())
     {
       // записываем в EEPROM начальное состояние настроек, если их там ещё нет
@@ -104,6 +105,7 @@ class EepromManager
           EEPROM.commit();
         }
 
+        EEPROM.write(EEPROM_ESP_MODE, ESP_MODE);
         EEPROM.write(EEPROM_LAMP_ON_ADDRESS, 0);
         EEPROM.write(EEPROM_DAWN_MODE_ADDRESS, 0);
         EEPROM.write(EEPROM_CURRENT_MODE_ADDRESS, 0);
@@ -127,6 +129,7 @@ class EepromManager
 
       readFavoritesSettings();
 
+      *espMode = (uint8_t)EEPROM.read(EEPROM_ESP_MODE);
       *onFlag = (bool)EEPROM.read(EEPROM_LAMP_ON_ADDRESS);
       *dawnMode = EEPROM.read(EEPROM_DAWN_MODE_ADDRESS);
       *currentMode = EEPROM.read(EEPROM_CURRENT_MODE_ADDRESS);
@@ -159,6 +162,12 @@ class EepromManager
     {
       EEPROM.write(EEPROM_ALARM_START_ADDRESS + EEPROM_ALARM_STRUCT_SIZE * (*alarmNumber), alarms[*alarmNumber].State);
       WriteUint16(EEPROM_ALARM_START_ADDRESS + EEPROM_ALARM_STRUCT_SIZE * (*alarmNumber) + 1, alarms[*alarmNumber].Time);
+      EEPROM.commit();
+    }
+
+    static void SaveEspMode(uint8_t* espMode)
+    {
+      EEPROM.write(EEPROM_ESP_MODE, *espMode);
       EEPROM.commit();
     }
 

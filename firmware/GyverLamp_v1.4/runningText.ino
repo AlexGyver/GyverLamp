@@ -42,7 +42,7 @@ bool fillString(const char* text)
       }
       else
       {
-        drawLetter(j, text[i], offset + j * (LET_WIDTH + SPACE));
+        drawLetter(text[i], offset + j * (LET_WIDTH + SPACE));
         i++;
         j++;
       }
@@ -60,7 +60,7 @@ bool fillString(const char* text)
   return false;
 }
 
-void drawLetter(uint8_t index, uint8_t letter, int8_t offset)
+void drawLetter(uint8_t letter, int8_t offset)
 {
   uint8_t start_pos = 0, finish_pos = LET_WIDTH;
 

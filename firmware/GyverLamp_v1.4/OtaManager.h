@@ -33,9 +33,14 @@ class OtaManager
   public:
     static OtaPhase OtaFlag;
 
+    OtaManager(ShowWarningDelegate showWarningDelegate)
+    {
+      this->showWarningDelegate = showWarningDelegate;
+    }
+
     bool RequestOtaUpdate()                                 // пользователь однократно запросил обновление по воздуху; возвращает true, когда переходит в режим обновления - startOtaUpdate()
     {
-      if (ESP_MODE != 1)
+      if (espMode != 1U)
       {
         #ifdef GENERAL_DEBUG
         LOG.print(F("Запрос обновления по воздуху поддерживается только в режиме ESP_MODE = 1\n"));
@@ -59,11 +64,13 @@ class OtaManager
       if (OtaFlag == OtaPhase::GotFirstConfirm)
       {
         OtaFlag = OtaPhase::GotSecondConfirm;
+        momentOfOtaStart = millis();
 
         #ifdef GENERAL_DEBUG
         LOG.print(F("Получено второе подтверждение обновления по воздуху\nСтарт режима обновления\n"));
         #endif
 
+        showWarningDelegate(CRGB::Yellow, 2000U, 500U);     // мигание жёлтым цветом 2 секунды (2 раза) - готовность к прошивке
         startOtaUpdate();
         return true;
       }
@@ -86,7 +93,7 @@ class OtaManager
         return;
       }
 
-      if (OtaFlag == OtaPhase::GotSecondConfirm &&
+      if ((OtaFlag == OtaPhase::GotSecondConfirm || OtaFlag == OtaPhase::InProgress) &&
           millis() - momentOfOtaStart >= ESP_CONF_TIMEOUT * 1000)
       {
         OtaFlag = OtaPhase::None;
@@ -97,12 +104,9 @@ class OtaManager
         delay(500);
         #endif
 
-        #if defined(ESP8266)
-        ESP.reset();
-        #else
-        ESP.restart();
-        #endif
+        showWarningDelegate(CRGB::Red, 2000U, 500U);        // мигание красным цветом 2 секунды (2 раза) - ожидание прошивки по воздуху прекращено, перезагрузка
 
+        ESP.restart();
         return;
       }
 
@@ -115,37 +119,41 @@ class OtaManager
   private:
     uint64_t momentOfFirstConfirmation = 0;                 // момент времени, когда получено первое подтверждение и с которого начинается отсчёт ожидания второго подтверждения
     uint64_t momentOfOtaStart = 0;                          // момент времени, когда развёрнута WiFi точка доступа для обновления по воздуху
+    ShowWarningDelegate showWarningDelegate;
 
     void startOtaUpdate()
     {
       char espHostName[65];
-      sprintf(espHostName, "%s-%u", AP_NAME, ESP.getChipId());
+      sprintf_P(espHostName, PSTR("%s-%u"), AP_NAME, ESP.getChipId());
       ArduinoOTA.setPort(ESP_OTA_PORT);
       ArduinoOTA.setHostname(espHostName);
       ArduinoOTA.setPassword(AP_PASS);
 
       ArduinoOTA.onStart([this]()
       {
-        String type;
+        OtaFlag = OtaPhase::InProgress;
+        char type[16];
         if (ArduinoOTA.getCommand() == U_FLASH)
         {
-          type = "sketch";
+          strcpy_P(type, PSTR("sketch"));
         }
         else // U_SPIFFS
         {
-          type = "filesystem";
+          strcpy_P(type, PSTR("filesystem"));
         }
 
         // NOTE: if updating SPIFFS this would be the place to unmount SPIFFS using SPIFFS.end()
 
         #ifdef GENERAL_DEBUG
-        LOG.printf_P(PSTR("Start updating %s\n"), type.c_str());
+        LOG.printf_P(PSTR("Start updating %s\n"), type);
         #endif
       });
 
       ArduinoOTA.onEnd([this]()
       {
         OtaFlag = OtaPhase::Done;
+        momentOfFirstConfirmation = 0;
+        momentOfOtaStart = 0;
 
         #ifdef GENERAL_DEBUG
         LOG.print(F("Обновление по воздуху выполнено\nПерезапуск"));
@@ -163,6 +171,8 @@ class OtaManager
       ArduinoOTA.onError([this](ota_error_t error)
       {
         OtaFlag = OtaPhase::None;
+        momentOfFirstConfirmation = 0;
+        momentOfOtaStart = 0;
 
         #ifdef GENERAL_DEBUG
         LOG.printf_P(PSTR("Обновление по воздуху завершилось ошибкой [%u]: "), error);
@@ -207,8 +217,6 @@ class OtaManager
       ArduinoOTA.setRebootOnSuccess(true);
       ArduinoOTA.begin();
       OtaFlag = OtaPhase::InProgress;
-      momentOfFirstConfirmation = 0;
-      momentOfOtaStart = 0;
 
       #ifdef GENERAL_DEBUG
       LOG.printf_P(PSTR("Для обновления в Arduino IDE выберите пункт меню Инструменты - Порт - '%s at "), espHostName);

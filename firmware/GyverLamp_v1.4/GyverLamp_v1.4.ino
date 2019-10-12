@@ -74,6 +74,19 @@
   - Добавлено управление по протоколу MQTT
   - Исправлена ошибка выключения будильника кнопкой
   - Добавлена задержка в 1 секунду сразу после старта, в течение которой нужно нажать кнопку, чтобы очистить сохранённые параметры WiFi (если ESP_RESET_ON_START == true)
+  --- 12.10.2019
+  - Добавлена возможность сменить рабочий режим лампы (ESP_MODE) без необходимости перепрошивки; вызывается по семикратному клику по кнопке при включенной матрице; сохраняется в EEPROM
+  - Изменён алгоритм работы будильника:
+  -  * обновление его оттенка/яркости происходит 1 раз в 3 секунды вместо 1 раза в минуту
+  -  * диоды разбиты на 6 групп, первой из которых назначается новый оттенок/яркость 1 раз в 3 секунды, вторая "отстаёт" на 1 шаг, третья - на 2 шага и т.д. (для большей плавности)
+  - Добавлена визуальная сигнализация о некоторых важных действиях/состояниях лампы:
+  -  * при запуске в режиме WiFi клиента и ещё не настроенных параметрах WiFi сети (когда их нужно ввести)                                                     - 1 короткая (0,25 сек) вспышка жёлтым
+  -  * если лампа стартовала в режиме WiFi клиента с ненастроенными параметрами WiFi сети, и они не были введены за отведённый таймаут (перед перезагрузкой)   - 1 короткая вспышка красным
+  -  * при переходе лампы в режим обновления по воздуху (OTA) по двум четырёхкратным кликам по кнопке или по кнопке OTA из android приложения                  - 2 стандартных (0,5 сек) вспышки жёлтым
+  -  * если лампа была переведена в режим OTA, но не дождалась прошивки за отведённый таймаут (перед перезагрузкой)                                            - 2 стандартных вспышки красным
+  -  * при переключении рабочего режима лампы WiFi точка доступа/WiFi клиент семикратным кликом по кнопке (перед перезагрузкой)                                - 3 стандартных вспышки красным
+  - Уменьшен таймаут подключения к WiFi сети до 6 секунд; вызвано увеличившейся продолжительностью работы функции setup(), она в сумме должна быть меньше 8 секунд
+  - Оптимизирован код
 */
 
 // Ссылка для менеджера плат:
@@ -126,7 +139,7 @@ GButton touch(BTN_PIN, LOW_PULL, NORM_OPEN);
 #endif
 
 #ifdef OTA
-OtaManager otaManager;
+OtaManager otaManager(&showWarning);
 OtaPhase OtaManager::OtaFlag = OtaPhase::None;
 #endif
 
@@ -159,7 +172,7 @@ AlarmType alarms[7];
 static const uint8_t dawnOffsets[] PROGMEM = {5, 10, 15, 20, 25, 30, 40, 50, 60};   // опции для выпадающего списка параметра "время перед 'рассветом'" (будильник); синхронизировано с android приложением
 uint8_t dawnMode;
 bool dawnFlag = false;
-long thisTime;
+uint32_t thisTime;
 bool manualOff = false;
 
 int8_t currentMode = 0;
@@ -212,10 +225,7 @@ void setup()
     if (digitalRead(BTN_PIN))
     {
       wifiManager.resetSettings();                          // сброс сохранённых SSID и пароля при старте с зажатой кнопкой, если разрешено
-
-      #ifdef GENERAL_DEBUG
       LOG.println(F("Настройки WiFiManager сброшены"));
-      #endif
     }
     #endif
   #endif
@@ -224,25 +234,41 @@ void setup()
   // ЛЕНТА/МАТРИЦА
   FastLED.addLeds<WS2812B, LED_PIN, COLOR_ORDER>(leds, NUM_LEDS)/*.setCorrection(TypicalLEDStrip)*/;
   FastLED.setBrightness(BRIGHTNESS);
-  if (CURRENT_LIMIT > 0) FastLED.setMaxPowerInVoltsAndMilliamps(5, CURRENT_LIMIT);
+  if (CURRENT_LIMIT > 0)
+  {
+    FastLED.setMaxPowerInVoltsAndMilliamps(5, CURRENT_LIMIT);
+  }
   FastLED.clear();
   FastLED.show();
 
 
+  // EEPROM
+  EepromManager::InitEepromSettings(                        // инициализация EEPROM; запись начального состояния настроек, если их там ещё нет; инициализация настроек лампы значениями из EEPROM
+    modes, alarms, &espMode, &ONflag, &dawnMode, &currentMode,
+    &(FavoritesManager::ReadFavoritesFromEeprom),
+    &(FavoritesManager::SaveFavoritesToEeprom));
+  LOG.printf_P(PSTR("Рабочий режим лампы: ESP_MODE = %d\n"), espMode);
+
+
   // WI-FI
   wifiManager.setDebugOutput(WIFIMAN_DEBUG);                // вывод отладочных сообщений
-  //wifiManager.setMinimumSignalQuality();                  // установка минимально приемлемого уровня сигнала WiFi сетей (8% по умолчанию)
-  if (ESP_MODE == 0)                                        // режим WiFi точки доступа
+  // wifiManager.setMinimumSignalQuality();                 // установка минимально приемлемого уровня сигнала WiFi сетей (8% по умолчанию)
+  if (espMode == 0U)                                        // режим WiFi точки доступа
   {
     // wifiManager.setConfigPortalBlocking(false);
-    WiFi.softAPConfig(                                      // wifiManager.startConfigPortal использовать нельзя, т.к. он блокирует вычислительный процесс внутри себя, а затем перезагружает ESP, т.е. предназначен только для ввода SSID и пароля
-      IPAddress(AP_STATIC_IP[0], AP_STATIC_IP[1], AP_STATIC_IP[2], AP_STATIC_IP[3]),        // IP адрес WiFi точки доступа
-      IPAddress(AP_STATIC_IP[0], AP_STATIC_IP[1], AP_STATIC_IP[2], 1),                      // первый доступный IP адрес сети
-      IPAddress(255, 255, 255, 0));                                                         // маска подсети
+
+    if (sizeof(AP_STATIC_IP))
+    {
+      LOG.println(F("Используется статический IP адрес WiFi точки доступа"));
+      wifiManager.setAPStaticIPConfig(                      // wifiManager.startConfigPortal использовать нельзя, т.к. он блокирует вычислительный процесс внутри себя, а затем перезагружает ESP, т.е. предназначен только для ввода SSID и пароля
+        IPAddress(AP_STATIC_IP[0], AP_STATIC_IP[1], AP_STATIC_IP[2], AP_STATIC_IP[3]),      // IP адрес WiFi точки доступа
+        IPAddress(AP_STATIC_IP[0], AP_STATIC_IP[1], AP_STATIC_IP[2], 1),                    // первый доступный IP адрес сети
+        IPAddress(255, 255, 255, 0));                                                       // маска подсети
+    }
 
     WiFi.softAP(AP_NAME, AP_PASS);
 
-    LOG.println(F("Режим WiFi точки доступа"));
+    LOG.println(F("Старт в режиме WiFi точки доступа"));
     LOG.print(F("IP адрес: "));
     LOG.println(WiFi.softAPIP());
 
@@ -250,19 +276,22 @@ void setup()
   }
   else                                                      // режим WiFi клиента (подключаемся к роутеру, если есть сохранённые SSID и пароль, иначе создаём WiFi точку доступа и запрашиваем их)
   {
-    LOG.println(F("Режим WiFi клиента"));
-    if (WiFi.SSID())
+    LOG.println(F("Старт в режиме WiFi клиента (подключение к роутеру)"));
+
+    if (WiFi.SSID().length())
     {
-      LOG.print(F("Подключение WiFi сети: "));
-      LOG.println(WiFi.SSID());
+      LOG.printf_P(PSTR("Подключение к WiFi сети: %s\n"), WiFi.SSID().c_str());
     }
     else
     {
       LOG.println(F("WiFi сеть не определена, запуск WiFi точки доступа для настройки параметров подключения к WiFi сети..."));
+      showWarning(CRGB::Yellow, 250U, 250U);                // мигание жёлтым цветом 0,25 секунды (1 раз) - нужно ввести параметры WiFi сети для подключения
     }
 
-    if (STA_STATIC_IP)
+    if (sizeof(STA_STATIC_IP))
     {
+      LOG.print(F("Сконфигурирован статический IP адрес: "));
+      LOG.printf_P(PSTR("%u.%u.%u.%u\n"), STA_STATIC_IP[0], STA_STATIC_IP[1], STA_STATIC_IP[2], STA_STATIC_IP[3]);
       wifiManager.setSTAStaticIPConfig(
         IPAddress(STA_STATIC_IP[0], STA_STATIC_IP[1], STA_STATIC_IP[2], STA_STATIC_IP[3]),  // статический IP адрес ESP в режиме WiFi клиента
         IPAddress(STA_STATIC_IP[0], STA_STATIC_IP[1], STA_STATIC_IP[2], 1),                 // первый доступный IP адрес сети (справедливо для 99,99% случаев; для сетей меньше чем на 255 адресов нужно вынести в константы)
@@ -276,12 +305,8 @@ void setup()
     if (WiFi.status() != WL_CONNECTED)
     {
       LOG.println(F("Время ожидания ввода SSID и пароля от WiFi сети или подключения к WiFi сети превышено\nПерезагрузка модуля"));
-
-      #if defined(ESP8266)
-      ESP.reset();
-      #else
+      showWarning(CRGB::Red, 250U, 250U);                   // мигание красным цветом 0,25 секунды (1 раз) - ожидание ввода SSID'а и пароля WiFi сети прекращено, перезагрузка
       ESP.restart();
-      #endif
     }
 
     LOG.print(F("IP адрес: "));
@@ -292,13 +317,6 @@ void setup()
   Udp.begin(localPort);
 
 
-  // EEPROM
-  EepromManager::InitEepromSettings(                        // инициализация EEPROM; запись начального состояния настроек, если их там ещё нет; инициализация настроек лампы значениями из EEPROM
-    modes, alarms, &ONflag, &dawnMode, &currentMode,
-    &(FavoritesManager::ReadFavoritesFromEeprom),
-    &(FavoritesManager::SaveFavoritesToEeprom));
-
-
   // NTP
   #ifdef USE_NTP
   timeClient.begin();
@@ -306,9 +324,12 @@ void setup()
 
 
   // MQTT
-  #if (USE_MQTT && ESP_MODE == 1)
-  mqttClient = new AsyncMqttClient();
-  MqttManager::setupMqtt(mqttClient, inputBuffer, &sendCurrent);      // создание экземпляров объектов для работы с MQTT, их инициализация и подключение к MQTT брокеру
+  #if (USE_MQTT)
+  if (espMode == 1U)
+  {
+    mqttClient = new AsyncMqttClient();
+    MqttManager::setupMqtt(mqttClient, inputBuffer, &sendCurrent);    // создание экземпляров объектов для работы с MQTT, их инициализация и подключение к MQTT брокеру
+  }
   #endif
 
 
@@ -358,7 +379,7 @@ void loop()
   }
 
   #if USE_MQTT
-  if (ESP_MODE == 1 && mqttClient && WiFi.isConnected() && !mqttClient->connected())
+  if (espMode == 1U && mqttClient && WiFi.isConnected() && !mqttClient->connected())
   {
     MqttManager::mqttConnect();                             // библиотека не умеет восстанавливать соединение в случае потери подключения к MQTT брокеру, нужно управлять этим явно
     MqttManager::needToPublish = true;

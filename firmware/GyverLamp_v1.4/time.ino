@@ -15,11 +15,18 @@ uint64_t lastResolveTryMoment = 0UL;
 bool timeSynched = false;
 bool ntpServerAddressResolved = false;
 IPAddress ntpServerIp = {0, 0, 0, 0};
+static CHSV dawnColor = CHSV(0, 0, 0);                                    // цвет "рассвета"
+static CHSV dawnColorMinus1 = CHSV(0, 0, 0);                              // для большей плавности назначаем каждый новый цвет только 1/10 всех диодов; каждая следующая 1/10 часть будет "оставать" на 1 шаг
+static CHSV dawnColorMinus2 = CHSV(0, 0, 0);
+static CHSV dawnColorMinus3 = CHSV(0, 0, 0);
+static CHSV dawnColorMinus4 = CHSV(0, 0, 0);
+static CHSV dawnColorMinus5 = CHSV(0, 0, 0);
+static uint8_t dawnCounter = 0;                                           // счётчик первых 10 шагов будильника
 
 
 void timeTick()
 {
-  if (ESP_MODE == 1)
+  if (espMode == 1U)
   {
     if (timeTimer.isReady())
     {
@@ -48,26 +55,41 @@ void timeTick()
         return;
       }
 
-      byte thisDay = timeClient.getDay();
+      uint8_t thisDay = timeClient.getDay();
       if (thisDay == 0) thisDay = 7;                                      // воскресенье это 0
       thisDay--;
       thisTime = timeClient.getHours() * 60 + timeClient.getMinutes();
+      uint32_t thisFullTime = timeClient.getHours() * 3600 + timeClient.getMinutes() * 60 + timeClient.getSeconds();
 
       // проверка рассвета
-      if (alarms[thisDay].State &&                                                            // день будильника
-          thisTime >= (alarms[thisDay].Time - pgm_read_byte(&dawnOffsets[dawnMode])) &&       // позже начала
-          thisTime < (alarms[thisDay].Time + DAWN_TIMEOUT))                                   // раньше конца + минута
+      if (alarms[thisDay].State &&                                                                                          // день будильника
+          thisTime >= (uint16_t)constrain(alarms[thisDay].Time - pgm_read_byte(&dawnOffsets[dawnMode]), 0, (24 * 60)) &&    // позже начала
+          thisTime < (alarms[thisDay].Time + DAWN_TIMEOUT))                                                                 // раньше конца + минута
       {
         if (!manualOff)                                                   // будильник не был выключен вручную (из приложения или кнопкой)
         {
-          LOG.println("Будильник включен");
           // величина рассвета 0-255
-          int32_t dawnPosition = 255 * ((float)(thisTime - (alarms[thisDay].Time - pgm_read_byte(&dawnOffsets[dawnMode]))) / pgm_read_byte(&dawnOffsets[dawnMode]));
+          int32_t dawnPosition = 255 * ((float)(thisFullTime - (alarms[thisDay].Time - pgm_read_byte(&dawnOffsets[dawnMode])) * 60) / (pgm_read_byte(&dawnOffsets[dawnMode]) * 60));
           dawnPosition = constrain(dawnPosition, 0, 255);
-          CHSV dawnColor = CHSV(map(dawnPosition, 0, 255, 10, 35),
-                                map(dawnPosition, 0, 255, 255, 170),
-                                map(dawnPosition, 0, 255, 10, DAWN_BRIGHT));
-          fill_solid(leds, NUM_LEDS, dawnColor);
+          dawnColorMinus5 = dawnCounter > 4 ? dawnColorMinus4 : dawnColorMinus5;
+          dawnColorMinus4 = dawnCounter > 3 ? dawnColorMinus3 : dawnColorMinus4;
+          dawnColorMinus3 = dawnCounter > 2 ? dawnColorMinus2 : dawnColorMinus3;
+          dawnColorMinus2 = dawnCounter > 1 ? dawnColorMinus1 : dawnColorMinus2;
+          dawnColorMinus1 = dawnCounter > 0 ? dawnColor : dawnColorMinus1;
+          dawnColor = CHSV(map(dawnPosition, 0, 255, 10, 35),
+                           map(dawnPosition, 0, 255, 255, 170),
+                           map(dawnPosition, 0, 255, 10, DAWN_BRIGHT));
+          dawnCounter++;
+          // fill_solid(leds, NUM_LEDS, dawnColor);
+          for (uint16_t i = 0U; i < NUM_LEDS; i++)
+          {
+            if (i % 6 == 0) leds[i] = dawnColor;                          // 1я 1/10 диодов: цвет текущего шага
+            if (i % 6 == 1) leds[i] = dawnColorMinus1;                    // 2я 1/10 диодов: -1 шаг
+            if (i % 6 == 2) leds[i] = dawnColorMinus2;                    // 3я 1/10 диодов: -2 шага
+            if (i % 6 == 3) leds[i] = dawnColorMinus3;                    // 3я 1/10 диодов: -3 шага
+            if (i % 6 == 4) leds[i] = dawnColorMinus4;                    // 3я 1/10 диодов: -4 шага
+            if (i % 6 == 5) leds[i] = dawnColorMinus5;                    // 3я 1/10 диодов: -5 шагов
+          }
           FastLED.setBrightness(255);
           delay(1);
           FastLED.show();
@@ -86,6 +108,12 @@ void timeTick()
           changePower();                                                  // выключение матрицы или установка яркости текущего эффекта в засисимости от того, была ли включена лампа до срабатывания будильника
         }
         manualOff = false;
+        dawnColorMinus1 = CHSV(0, 0, 0);
+        dawnColorMinus2 = CHSV(0, 0, 0);
+        dawnColorMinus3 = CHSV(0, 0, 0);
+        dawnColorMinus4 = CHSV(0, 0, 0);
+        dawnColorMinus5 = CHSV(0, 0, 0);
+        dawnCounter = 0;
       }
     }
   }

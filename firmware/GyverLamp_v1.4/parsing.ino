@@ -21,8 +21,11 @@ void parseUDP()
     char reply[MAX_UDP_BUFFER_SIZE];
     processInputBuffer(inputBuffer, reply, true);
 
-    #if (USE_MQTT && ESP_MODE == 1)                         // отправка ответа выполнения команд по MQTT, если разрешено
-    strcpy(MqttManager::mqttBuffer, reply);                 // разрешение определяется при выполнении каждой команды отдельно, команды GET, DEB, DISCOVER и OTA, пришедшие по UDP, игнорируются (приходят раз в 2 секунды от приложения)
+    #if (USE_MQTT)                                          // отправка ответа выполнения команд по MQTT, если разрешено
+    if (espMode == 1U)
+    {
+      strcpy(MqttManager::mqttBuffer, reply);               // разрешение определяется при выполнении каждой команды отдельно, команды GET, DEB, DISCOVER и OTA, пришедшие по UDP, игнорируются (приходят раз в 2 секунды от приложения)
+    }
     #endif
     
     Udp.beginPacket(Udp.remoteIP(), Udp.remotePort());
@@ -62,13 +65,18 @@ void processInputBuffer(char *inputBuffer, char *outputBuffer, bool generateOutp
       memcpy(buff, &inputBuffer[3], strlen(inputBuffer));   // взять подстроку, состоящую последних символов строки inputBuffer, начиная с символа 4
       currentMode = (uint8_t)atoi(buff);
       loadingFlag = true;
+      settChanged = true;
+      eepromTimeout = millis();
       FastLED.clear();
       delay(1);
       sendCurrent(inputBuffer);
       FastLED.setBrightness(modes[currentMode].Brightness);
 
-      #if (USE_MQTT && ESP_MODE == 1)
-      MqttManager::needToPublish = true;
+      #if (USE_MQTT)
+      if (espMode == 1U)
+      {
+        MqttManager::needToPublish = true;
+      }
       #endif
     }
 
@@ -82,8 +90,11 @@ void processInputBuffer(char *inputBuffer, char *outputBuffer, bool generateOutp
       eepromTimeout = millis();
       sendCurrent(inputBuffer);
 
-      #if (USE_MQTT && ESP_MODE == 1)
-      MqttManager::needToPublish = true;
+      #if (USE_MQTT)
+      if (espMode == 1U)
+      {
+        MqttManager::needToPublish = true;
+      }
       #endif
     }
 
@@ -96,8 +107,11 @@ void processInputBuffer(char *inputBuffer, char *outputBuffer, bool generateOutp
       eepromTimeout = millis();
       sendCurrent(inputBuffer);
 
-      #if (USE_MQTT && ESP_MODE == 1)
-      MqttManager::needToPublish = true;
+      #if (USE_MQTT)
+      if (espMode == 1U)
+      {
+        MqttManager::needToPublish = true;
+      }
       #endif
     }
 
@@ -110,8 +124,11 @@ void processInputBuffer(char *inputBuffer, char *outputBuffer, bool generateOutp
       eepromTimeout = millis();
       sendCurrent(inputBuffer);
 
-      #if (USE_MQTT && ESP_MODE == 1)
-      MqttManager::needToPublish = true;
+      #if (USE_MQTT)
+      if (espMode == 1U)
+      {
+        MqttManager::needToPublish = true;
+      }
       #endif
     }
 
@@ -124,8 +141,11 @@ void processInputBuffer(char *inputBuffer, char *outputBuffer, bool generateOutp
       changePower();
       sendCurrent(inputBuffer);
 
-      #if (USE_MQTT && ESP_MODE == 1)
-      MqttManager::needToPublish = true;
+      #if (USE_MQTT)
+      if (espMode == 1U)
+      {
+        MqttManager::needToPublish = true;
+      }
       #endif
     }
 
@@ -137,8 +157,11 @@ void processInputBuffer(char *inputBuffer, char *outputBuffer, bool generateOutp
       changePower();
       sendCurrent(inputBuffer);
 
-      #if (USE_MQTT && ESP_MODE == 1)
-      MqttManager::needToPublish = true;
+      #if (USE_MQTT)
+      if (espMode == 1U)
+      {
+        MqttManager::needToPublish = true;
+      }
       #endif
     }
 
@@ -160,15 +183,16 @@ void processInputBuffer(char *inputBuffer, char *outputBuffer, bool generateOutp
       {
         memcpy(buff, &inputBuffer[8], strlen(inputBuffer)); // взять подстроку, состоящую последних символов строки inputBuffer, начиная с символа 9
         alarms[alarmNum].Time = atoi(buff);
-        uint8_t hour = floor(alarms[alarmNum].Time / 60);
-        uint8_t minute = alarms[alarmNum].Time - hour * 60;
         sendAlarms(inputBuffer);
       }
       EepromManager::SaveAlarmsSettings(&alarmNum, alarms);
 
-      #if (USE_MQTT && ESP_MODE == 1)
-      strcpy(MqttManager::mqttBuffer, inputBuffer);
-      MqttManager::needToPublish = true;
+      #if (USE_MQTT)
+      if (espMode == 1U)
+      {
+        strcpy(MqttManager::mqttBuffer, inputBuffer);
+        MqttManager::needToPublish = true;
+      }
       #endif
     }
 
@@ -184,14 +208,17 @@ void processInputBuffer(char *inputBuffer, char *outputBuffer, bool generateOutp
       EepromManager::SaveDawnMode(&dawnMode);
       sendAlarms(inputBuffer);
 
-      #if (USE_MQTT && ESP_MODE == 1)
-      MqttManager::needToPublish = true;
+      #if (USE_MQTT)
+      if (espMode == 1U)
+      {
+        MqttManager::needToPublish = true;
+      }
       #endif
     }
 
     else if (!strncmp_P(inputBuffer, PSTR("DISCOVER"), 8))  // обнаружение приложением модуля esp в локальной сети
     {
-      if (ESP_MODE == 1)                                    // работает только в режиме WiFi клиента
+      if (espMode == 1U)                                    // работает только в режиме WiFi клиента
       {
         sprintf_P(inputBuffer, PSTR("IP %u.%u.%u.%u:%u"),
           WiFi.localIP()[0],
@@ -221,8 +248,11 @@ void processInputBuffer(char *inputBuffer, char *outputBuffer, bool generateOutp
       TimerManager::TimerHasFired = false;
       sendTimer(inputBuffer);
 
-      #if (USE_MQTT && ESP_MODE == 1)
-      MqttManager::needToPublish = true;
+      #if (USE_MQTT)
+      if (espMode == 1U)
+      {
+        MqttManager::needToPublish = true;
+      }
       #endif
     }
 
@@ -238,8 +268,11 @@ void processInputBuffer(char *inputBuffer, char *outputBuffer, bool generateOutp
       settChanged = true;
       eepromTimeout = millis();
 
-      #if (USE_MQTT && ESP_MODE == 1)
-      MqttManager::needToPublish = true;
+      #if (USE_MQTT)
+      if (espMode == 1U)
+      {
+        MqttManager::needToPublish = true;
+      }
       #endif
     }
 
@@ -282,7 +315,7 @@ void sendCurrent(char *outputBuffer)
     modes[currentMode].Speed,
     modes[currentMode].Scale,
     ONflag,
-    ESP_MODE);
+    espMode);
   
   #ifdef USE_NTP
   strcat_P(outputBuffer, PSTR(" 1"));

@@ -10,10 +10,10 @@ void fillAll(CRGB color)
 }
 
 // функция отрисовки точки по координатам X Y
-void drawPixelXY(uint8_t x, uint8_t y, CRGB color)
+void drawPixelXY(int16_t x, int16_t y, CRGB color)
 {
-  if (x < 0 || x > WIDTH - 1 || y < 0 || y > HEIGHT - 1) return;
-  uint32_t thisPixel = getPixelNumber(x, y) * SEGMENTS;
+  if (x < 0 || x > (int16_t)(WIDTH - 1) || y < 0 || y > (int16_t)(HEIGHT - 1)) return;
+  uint32_t thisPixel = getPixelNumber((uint8_t)x, (uint8_t)y) * SEGMENTS;
   for (uint8_t i = 0; i < SEGMENTS; i++)
   {
     leds[thisPixel + i] = color;
@@ -24,7 +24,7 @@ void drawPixelXY(uint8_t x, uint8_t y, CRGB color)
 uint32_t getPixColor(uint32_t thisSegm)
 {
   uint32_t thisPixel = thisSegm * SEGMENTS;
-  if (thisPixel < 0 || thisPixel > NUM_LEDS - 1) return 0;
+  if (thisPixel > NUM_LEDS - 1) return 0;
   return (((uint32_t)leds[thisPixel].r << 16) | ((uint32_t)leds[thisPixel].g << 8 ) | (uint32_t)leds[thisPixel].b);
 }
 
