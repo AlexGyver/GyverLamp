@@ -130,7 +130,7 @@ void printTime(uint32_t thisTime, bool onDemand)            // периодич�
   if ((needToPrint && thisTime != lastTimePrinted) || onDemand)
   {
     lastTimePrinted = thisTime;
-    char stringTime[10U];
+    char stringTime[10U];                                   // буффер для выводимого текста, его длина должна быть НЕ МЕНЬШЕ, чем длина текста + 1
     sprintf_P(stringTime, PSTR("-> %u:%02u"), (uint8_t)((thisTime - thisTime % 60U) / 60U), (uint8_t)(thisTime % 60U));
     loadingFlag = true;
     FastLED.setBrightness(modes[currentMode].Brightness);
