@@ -13,7 +13,6 @@
 #define RESOLVE_TIMEOUT       (1500UL)                                    // таймаут ожидания подключения к интернету в миллисекундах (1,5 секунды)
 uint64_t lastResolveTryMoment = 0UL;
 bool timeSynched = false;
-bool ntpServerAddressResolved = false;
 IPAddress ntpServerIp = {0, 0, 0, 0};
 static CHSV dawnColor = CHSV(0, 0, 0);                                    // цвет "рассвета"
 static CHSV dawnColorMinus1 = CHSV(0, 0, 0);                              // для большей плавности назначаем каждый новый цвет только 1/10 всех диодов; каждая следующая 1/10 часть будет "оставать" на 1 шаг
@@ -60,6 +59,8 @@ void timeTick()
       thisDay--;
       thisTime = timeClient.getHours() * 60 + timeClient.getMinutes();
       uint32_t thisFullTime = timeClient.getHours() * 3600 + timeClient.getMinutes() * 60 + timeClient.getSeconds();
+
+      printTime(thisTime, false);
 
       // проверка рассвета
       if (alarms[thisDay].State &&                                                                                          // день будильника

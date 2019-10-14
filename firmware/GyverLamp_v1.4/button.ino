@@ -84,14 +84,19 @@ void buttonTick()
     #endif
   }
 
-  if (ONflag && clickCount == 5U)                           // вывод IP на лампу
+  if (clickCount == 5U)                                     // вывод IP на лампу
   {
     if (espMode == 1U)
     {
       loadingFlag = true;
-      while(!fillString(WiFi.localIP().toString().c_str())) delay(1);
+      while(!fillString(WiFi.localIP().toString().c_str(), CRGB::White)) { delay(1); ESP.wdtFeed(); }
       loadingFlag = true;
     }
+  }
+
+  if (clickCount == 6U)                                     // вывод текущего времени бегущей строкой
+  {
+    printTime(thisTime, true);
   }
 
   if (ONflag && clickCount == 7U)                           // смена рабочего режима лампы: с WiFi точки доступа на WiFi клиент или наоборот

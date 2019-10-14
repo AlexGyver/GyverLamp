@@ -9,14 +9,16 @@
 #define LET_WIDTH             (5U)                          // ширина буквы шрифта
 #define LET_HEIGHT            (8U)                          // высота буквы шрифта
 #define SPACE                 (1U)                          // пробел
-#define LETTER_COLOR          (CRGB::White)                 // цвет букв
+#define LETTER_COLOR          (CRGB::White)                 // цвет букв по умолчанию
+
 
 // --- ДЛЯ РАЗРАБОТЧИКОВ ---------------
 
 int16_t offset = WIDTH;
 uint32_t scrollTimer = 0LL;
 
-bool fillString(const char* text)
+
+bool fillString(const char* text, CRGB letterColor)
 {
   if (!text || !strlen(text))
   {
@@ -36,13 +38,13 @@ bool fillString(const char* text)
     uint8_t i = 0, j = 0;
     while (text[i] != '\0')
     {
-      if ((uint8_t)text[i] > 191)                           // работаем с русскими буквами!
+      if ((uint8_t)text[i] > 191)                           // работаем с русскими буквами
       {
         i++;
       }
       else
       {
-        drawLetter(text[i], offset + j * (LET_WIDTH + SPACE));
+        drawLetter(text[i], offset + j * (LET_WIDTH + SPACE), letterColor);
         i++;
         j++;
       }
@@ -60,7 +62,88 @@ bool fillString(const char* text)
   return false;
 }
 
-void drawLetter(uint8_t letter, int8_t offset)
+
+void printTime(uint32_t thisTime, bool onDemand)            // периодический вывод времени бегущей строкой; onDemand - по требованию, вывод текущего времени; иначе - вывод времени по расписанию
+{
+  #if defined(USE_NTP) && defined(PRINT_TIME)               // вывод, только если используется синхронизация времени и если заказан его вывод бегущей строкой
+  if (espMode != 1U || !ntpServerAddressResolved)           // вывод только в режиме WiFi клиента и только, если имя сервера времени разрезолвлено
+  {
+    return;
+  }
+
+  CRGB letterColor = CRGB::Black;
+  bool needToPrint = false;
+  
+  #if (PRINT_TIME >= 1U)                                    // вывод только каждый час (красным цветом)
+  if (thisTime % 60U == 0U)
+  {
+    needToPrint = true;
+    letterColor = CRGB::Red;
+  }
+  #endif
+
+  #if (PRINT_TIME == 2U)                                    // вывод каждый час (красным цветом) + каждые 30 минут (синим цветом)
+  if (thisTime % 60U != 0U && thisTime % 30U == 0U)
+  {
+    needToPrint = true;
+    letterColor = CRGB::Blue;
+  }
+  #endif
+
+  #if (PRINT_TIME == 3U)                                    // вывод каждый час (красным цветом) + каждые 15 минут (синим цветом)
+  if (thisTime % 60U != 0U && thisTime % 15U == 0U)
+  {
+    needToPrint = true;
+    letterColor = CRGB::Blue;
+  }
+  #endif
+
+  #if (PRINT_TIME == 4U)                                    // вывод каждый час (красным цветом) + каждые 10 минут (синим цветом)
+  if (thisTime % 60U != 0U && thisTime % 10U == 0U)
+  {
+    needToPrint = true;
+    letterColor = CRGB::Blue;
+  }
+  #endif
+
+  #if (PRINT_TIME == 5U)                                    // вывод каждый час (красным цветом) + каждые 5 минут (синим цветом)
+  if (thisTime % 60U != 0U && thisTime % 5U == 0U)
+  {
+    needToPrint = true;
+    letterColor = CRGB::Blue;
+  }
+  #endif
+
+  #if (PRINT_TIME == 6U)                                    // вывод каждый час (красным цветом) + каждую минуту (синим цветом)
+  if (thisTime % 60U != 0U)
+  {
+    needToPrint = true;
+    letterColor = CRGB::Blue;
+  }
+  #endif
+
+  if (onDemand)
+  {
+    letterColor = CRGB::White;
+  }
+
+  if ((needToPrint && thisTime != lastTimePrinted) || onDemand)
+  {
+    lastTimePrinted = thisTime;
+    char stringTime[10U];
+    sprintf_P(stringTime, PSTR("-> %u:%02u"), (uint8_t)((thisTime - thisTime % 60U) / 60U), (uint8_t)(thisTime % 60U));
+    loadingFlag = true;
+    FastLED.setBrightness(modes[currentMode].Brightness);
+    delay(1);
+    while (!fillString(stringTime, letterColor)) { delay(1); ESP.wdtFeed(); }
+    loadingFlag = true;
+  }
+
+  #endif
+}
+
+
+void drawLetter(uint8_t letter, int8_t offset, CRGB letterColor)
 {
   uint8_t start_pos = 0, finish_pos = LET_WIDTH;
 
@@ -100,7 +183,7 @@ void drawLetter(uint8_t letter, int8_t offset)
       {
         if (thisBit)
         {
-          leds[getPixelNumber(offset + i, TEXT_HEIGHT + j)] = LETTER_COLOR;
+          leds[getPixelNumber(offset + i, TEXT_HEIGHT + j)] = letterColor;
         }
         else
         {
@@ -111,7 +194,7 @@ void drawLetter(uint8_t letter, int8_t offset)
       {
         if (thisBit)
         {
-          leds[getPixelNumber(i, offset + TEXT_HEIGHT + j)] = LETTER_COLOR;
+          leds[getPixelNumber(i, offset + TEXT_HEIGHT + j)] = letterColor;
         }
         else
         {

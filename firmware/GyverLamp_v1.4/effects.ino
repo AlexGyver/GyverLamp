@@ -229,7 +229,7 @@ void rainbowDiagonalRoutine()
     for (uint8_t j = 0U; j < HEIGHT; j++)
     {
       float twirlFactor = 3.0F * (modes[EFF_RAINBOW_DIAG].Scale / 100.0F);      // на сколько оборотов будет закручена матрица, [0..3]
-      CRGB thisColor = CHSV(constrain((uint8_t)(hue + (float)(WIDTH / HEIGHT * i + j * twirlFactor) * (float)(255 / maxDim)), 0, 255), 255, 255);
+      CRGB thisColor = CHSV((uint8_t)(hue + (float)(WIDTH / HEIGHT * i + j * twirlFactor) * (float)(255 / maxDim)), 255, 255);
       drawPixelXY(i, j, thisColor);
     }
   }

@@ -87,6 +87,11 @@
   -  * при переключении рабочего режима лампы WiFi точка доступа/WiFi клиент семикратным кликом по кнопке (перед перезагрузкой)                                - 3 стандартных вспышки красным
   - Уменьшен таймаут подключения к WiFi сети до 6 секунд; вызвано увеличившейся продолжительностью работы функции setup(), она в сумме должна быть меньше 8 секунд
   - Оптимизирован код
+  --- 14.10.2019
+  - Если при первом старте в режиме WiFi клиента запрашиваемые имя и пароль WiFi сети не введены за отведённый таймаут (5 минут), лампа перезагрузится в режиме точки доступа
+  - Добавлен вывод времени бегущей строкой:
+  -  * по запросу - шестикратному клику - текущее время белым цветом;
+  -  * периодически - определяется константой PRINT_TIME в Constants.h - от раза в час (красным цветом) до раза в минуту (синим цветом) с яркостью текущего эффекта как при включенной, так и при выключенной матрице
 */
 
 // Ссылка для менеджера плат:
@@ -133,6 +138,8 @@ NTPClient timeClient(ntpUDP, NTP_ADDRESS, GMT * 3600, NTP_INTERVAL);
 #endif
 
 timerMinim timeTimer(3000);
+bool ntpServerAddressResolved = false;
+uint32_t lastTimePrinted = 0U;
 
 #ifdef ESP_USE_BUTTON
 GButton touch(BTN_PIN, LOW_PULL, NORM_OPEN);
@@ -200,6 +207,7 @@ void setup()
 {
   Serial.begin(115200);
   Serial.println();
+  ESP.wdtEnable(WDTO_8S);
 
 
   // TELNET
@@ -209,11 +217,9 @@ void setup()
   {
     handleTelnetClient();
     delay(100);
+    ESP.wdtFeed();
   }
   #endif
-
-  ESP.wdtDisable();
-  //ESP.wdtEnable(WDTO_8S);
 
 
   // КНОПКА
@@ -227,6 +233,7 @@ void setup()
       wifiManager.resetSettings();                          // сброс сохранённых SSID и пароля при старте с зажатой кнопкой, если разрешено
       LOG.println(F("Настройки WiFiManager сброшены"));
     }
+    ESP.wdtFeed();
     #endif
   #endif
 
@@ -304,7 +311,14 @@ void setup()
 
     if (WiFi.status() != WL_CONNECTED)
     {
-      LOG.println(F("Время ожидания ввода SSID и пароля от WiFi сети или подключения к WiFi сети превышено\nПерезагрузка модуля"));
+      LOG.println(F("Время ожидания ввода SSID и пароля от WiFi сети или подключения к WiFi сети превышено\nЛампа будет перезагружена в режиме WiFi точки доступа!\n"));
+
+      espMode = (espMode == 0U) ? 1U : 0U;
+      EepromManager::SaveEspMode(&espMode);
+
+      LOG.printf_P(PSTR("Рабочий режим лампы изменён и сохранён в энергонезависимую память\nНовый рабочий режим: ESP_MODE = %d, %s\nРестарт...\n"),
+        espMode, espMode == 0U ? F("WiFi точка доступа") : F("WiFi клиент (подключение к роутеру)"));
+
       showWarning(CRGB::Red, 250U, 250U);                   // мигание красным цветом 0,25 секунды (1 раз) - ожидание ввода SSID'а и пароля WiFi сети прекращено, перезагрузка
       ESP.restart();
     }
@@ -312,6 +326,7 @@ void setup()
     LOG.print(F("IP адрес: "));
     LOG.println(WiFi.localIP());
   }
+  ESP.wdtFeed();
 
   LOG.printf_P(PSTR("Порт UDP сервера: %u\n"), localPort);
   Udp.begin(localPort);
@@ -320,6 +335,7 @@ void setup()
   // NTP
   #ifdef USE_NTP
   timeClient.begin();
+  ESP.wdtFeed();
   #endif
 
 
@@ -330,6 +346,7 @@ void setup()
     mqttClient = new AsyncMqttClient();
     MqttManager::setupMqtt(mqttClient, inputBuffer, &sendCurrent);    // создание экземпляров объектов для работы с MQTT, их инициализация и подключение к MQTT брокеру
   }
+  ESP.wdtFeed();
   #endif
 
 
@@ -401,5 +418,4 @@ void loop()
   #endif
 
   ESP.wdtFeed();                                            // пнуть собаку
-  yield();                                                  // обработать все "служебные" задачи: wdt, WiFi подключение и т.д. (?)
 }
