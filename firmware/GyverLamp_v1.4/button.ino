@@ -1,13 +1,16 @@
 #ifdef ESP_USE_BUTTON
-bool brightDirection;
 
-static bool startButtonHolding = false;                     // флаг: кнопка удерживается для изменения яркости лампы
+bool brightDirection;
+static bool startButtonHolding = false;                     // флаг: кнопка удерживается для изменения яркости/скорости/масштаба лампы кнопкой
+
 
 void buttonTick()
 {
   touch.tick();
   uint8_t clickCount = touch.hasClicks() ? touch.getClicks() : 0U;
 
+
+  // однократное нажатие
   if (clickCount == 1U)
   {
     if (dawnFlag)
@@ -34,6 +37,8 @@ void buttonTick()
     #endif
   }
 
+
+  // двухкратное нажатие
   if (ONflag && clickCount == 2U)
   {
     if (++currentMode >= (int8_t)MODE_AMOUNT) currentMode = 0;
@@ -52,6 +57,8 @@ void buttonTick()
     #endif
   }
 
+
+  // трёхкратное нажатие
   if (ONflag && clickCount == 3U)
   {
     if (--currentMode < 0) currentMode = MODE_AMOUNT - 1;
@@ -70,6 +77,8 @@ void buttonTick()
     #endif
   }
 
+
+  // четырёхкратное нажатие
   if (clickCount == 4U)
   {
     #ifdef OTA
@@ -84,6 +93,8 @@ void buttonTick()
     #endif
   }
 
+
+  // пятикратное нажатие
   if (clickCount == 5U)                                     // вывод IP на лампу
   {
     if (espMode == 1U)
@@ -94,11 +105,15 @@ void buttonTick()
     }
   }
 
+
+  // шестикратное нажатие
   if (clickCount == 6U)                                     // вывод текущего времени бегущей строкой
   {
     printTime(thisTime, true);
   }
 
+
+  // семикратное нажатие
   if (ONflag && clickCount == 7U)                           // смена рабочего режима лампы: с WiFi точки доступа на WiFi клиент или наоборот
   {
     espMode = (espMode == 0U) ? 1U : 0U;
@@ -113,39 +128,83 @@ void buttonTick()
     showWarning(CRGB::Red, 3000U, 500U);                    // мигание красным цветом 3 секунды - смена рабочего режима лампы, перезагрузка
     ESP.restart();
   }
-    
 
+
+  // кнопка только начала удерживаться
   if (ONflag && touch.isHolded())
   {
     brightDirection = !brightDirection;
     startButtonHolding = true;
   }
 
+
+  // кнопка нажата и удерживается
   if (ONflag && touch.isStep())
   {
-    uint8_t delta = modes[currentMode].Brightness < 10U     // определение шага изменения яркости: при яркости [1..10] шаг = 1, при [11..16] шаг = 3, при [17..255] шаг = 15
-      ? 1U
-      : 5U;
-    modes[currentMode].Brightness =
-      constrain(brightDirection
-        ? modes[currentMode].Brightness + delta
-        : modes[currentMode].Brightness - delta,
-      1, 255);
-    FastLED.setBrightness(modes[currentMode].Brightness);
+    switch (touch.getHoldClicks())
+    {
+      case 0U:                                              // просто удержание (до удержания кнопки кликов не было) - изменение яркости
+      {
+        uint8_t delta = modes[currentMode].Brightness < 10U // определение шага изменения яркости: при яркости [1..10] шаг = 1, при [11..16] шаг = 3, при [17..255] шаг = 15
+          ? 1U
+          : 5U;
+        modes[currentMode].Brightness =
+          constrain(brightDirection
+            ? modes[currentMode].Brightness + delta
+            : modes[currentMode].Brightness - delta,
+          1, 255);
+        FastLED.setBrightness(modes[currentMode].Brightness);
+
+        #ifdef GENERAL_DEBUG
+        LOG.printf_P(PSTR("Новое значение яркости: %d\n"), modes[currentMode].Brightness);
+        #endif
+
+        break;
+      }
+
+      case 1U:                                              // удержание после одного клика - изменение скорости
+      {
+        modes[currentMode].Speed = constrain(brightDirection ? modes[currentMode].Speed + 1 : modes[currentMode].Speed - 1, 1, 255);
+
+        #ifdef GENERAL_DEBUG
+        LOG.printf_P(PSTR("Новое значение скорости: %d\n"), modes[currentMode].Speed);
+        #endif
+
+        break;
+      }
+
+      case 2U:                                              // удержание после двух кликов - изменение масштаба
+      {
+        modes[currentMode].Scale = constrain(brightDirection ? modes[currentMode].Scale + 1 : modes[currentMode].Scale - 1, 1, 100);
+
+        #ifdef GENERAL_DEBUG
+        LOG.printf_P(PSTR("Новое значение масштаба: %d\n"), modes[currentMode].Scale);
+        #endif
+
+        break;
+      }
+
+      default:
+        break;
+    }
+
     settChanged = true;
     eepromTimeout = millis();
+  }
 
-    #ifdef GENERAL_DEBUG
-    LOG.printf_P(PSTR("New brightness value: %d\n"), modes[currentMode].Brightness);
+
+  // кнопка отпущена после удерживания
+  if (ONflag && !touch.isHold() && startButtonHolding)      // кнопка отпущена после удерживания, нужно отправить MQTT сообщение об изменении яркости лампы
+  {
+    startButtonHolding = false;
+    loadingFlag = true;
+
+    #if (USE_MQTT)
+    if (espMode == 1U)
+    {
+      MqttManager::needToPublish = true;
+    }
     #endif
   }
-
-  #if (USE_MQTT)
-  if (espMode == 1U && ONflag && !touch.isHold() && startButtonHolding)         // кнопка отпущена после удерживания, нужно отправить MQTT сообщение об изменении яркости лампы
-  {
-    MqttManager::needToPublish = true;
-    startButtonHolding = false;
-  }
-  #endif
 }
 #endif

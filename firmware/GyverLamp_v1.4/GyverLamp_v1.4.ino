@@ -224,8 +224,8 @@ void setup()
 
   // КНОПКА
   #if defined(ESP_USE_BUTTON)
-  touch.setStepTimeout(100);
-  touch.setClickTimeout(500);
+  touch.setStepTimeout(BUTTON_STEP_TIMEOUT);
+  touch.setClickTimeout(BUTTON_CLICK_TIMEOUT);
     #if ESP_RESET_ON_START
     delay(1000);                                            // ожидание инициализации модуля кнопки ttp223 (по спецификации 250мс)
     if (digitalRead(BTN_PIN))
