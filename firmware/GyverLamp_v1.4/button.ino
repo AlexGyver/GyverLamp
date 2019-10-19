@@ -109,7 +109,7 @@ void buttonTick()
   // шестикратное нажатие
   if (clickCount == 6U)                                     // вывод текущего времени бегущей строкой
   {
-    printTime(thisTime, true);
+    printTime(thisTime, true, ONflag);
   }
 
 

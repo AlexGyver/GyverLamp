@@ -63,9 +63,10 @@ bool fillString(const char* text, CRGB letterColor)
 }
 
 
-void printTime(uint32_t thisTime, bool onDemand)            // периодический вывод времени бегущей строкой; onDemand - по требованию, вывод текущего времени; иначе - вывод времени по расписанию
+void printTime(uint32_t thisTime, bool onDemand, bool ONflag) // периодический вывод времени бегущей строкой; onDemand - по требованию, вывод текущего времени; иначе - вывод времени по расписанию
 {
   #if defined(USE_NTP) && defined(PRINT_TIME)               // вывод, только если используется синхронизация времени и если заказан его вывод бегущей строкой
+
   if (espMode != 1U || !ntpServerAddressResolved)           // вывод только в режиме WiFi клиента и только, если имя сервера времени разрезолвлено
   {
     return;
@@ -133,13 +134,52 @@ void printTime(uint32_t thisTime, bool onDemand)            // периодич�
     char stringTime[10U];                                   // буффер для выводимого текста, его длина должна быть НЕ МЕНЬШЕ, чем длина текста + 1
     sprintf_P(stringTime, PSTR("-> %u:%02u"), (uint8_t)((thisTime - thisTime % 60U) / 60U), (uint8_t)(thisTime % 60U));
     loadingFlag = true;
-    FastLED.setBrightness(modes[currentMode].Brightness);
+    FastLED.setBrightness(getBrightnessForPrintTime(thisTime, ONflag));
     delay(1);
     while (!fillString(stringTime, letterColor)) { delay(1); ESP.wdtFeed(); }
     loadingFlag = true;
   }
 
   #endif
+}
+
+
+uint8_t getBrightnessForPrintTime(uint32_t thisTime, bool ONflag)     // определение яркости для вывода времени бегущей строкой в зависимости от ESP_MODE, USE_NTP, успешности синхронизации времени,
+                                                                      // текущего времени суток, настроек дневного/ночного времени и того, включена ли сейчас матрица
+{
+  #if defined(USE_NTP) && defined(PRINT_TIME)
+
+  if (espMode != 1U || !ntpServerAddressResolved || ONflag)
+  {
+    return modes[currentMode].Brightness;
+  }
+
+  if (NIGHT_HOURS_START >= NIGHT_HOURS_STOP)                          // ночное время включает переход через полночь
+  {
+    if (thisTime >= NIGHT_HOURS_START || thisTime <= NIGHT_HOURS_STOP)// период действия ночного времени
+    {
+      return (NIGHT_HOURS_BRIGHTNESS >= 0)
+        ? NIGHT_HOURS_BRIGHTNESS
+        : modes[currentMode].Brightness;
+    }
+  }
+  else                                                                // ночное время не включает переход через полночь
+  {
+    if (thisTime >= NIGHT_HOURS_START && thisTime <= NIGHT_HOURS_STOP)// период действия ночного времени
+    {
+      return (NIGHT_HOURS_BRIGHTNESS >= 0)
+        ? NIGHT_HOURS_BRIGHTNESS
+        : modes[currentMode].Brightness;
+    }
+  }
+
+  return (DAY_HOURS_BRIGHTNESS >= 0)                                  // дневное время
+    ? DAY_HOURS_BRIGHTNESS
+    : modes[currentMode].Brightness;
+
+  #endif
+
+  return modes[currentMode].Brightness;
 }
 
 

@@ -60,7 +60,7 @@ void timeTick()
       thisTime = timeClient.getHours() * 60 + timeClient.getMinutes();
       uint32_t thisFullTime = timeClient.getHours() * 3600 + timeClient.getMinutes() * 60 + timeClient.getSeconds();
 
-      printTime(thisTime, false);
+      printTime(thisTime, false, ONflag);
 
       // проверка рассвета
       if (alarms[thisDay].State &&                                                                                          // день будильника
