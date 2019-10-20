@@ -48,6 +48,8 @@
  *
  * 111-141   31       настройки режима избранных эффектов (вкл/выкл - 1 байт; интервал - 2 байта; разброс - 2 байта; инициализировать вкл/выкл - 1 байт; вкл/выкл каждого эффекта - 25 (MODE_AMOUNT) байт; вкл/выкл не хранится в EEPROM)
  * 
+ * 195       1        признак "кнопка разблокирована"
+ * 196       1        рабочий режим лампы (ESP_MODE)
  * 197       1        состояние лампы (вкл/выкл)
  * 198       1        признак первого запуска (определяет необходимость первоначальной записи всех хранимых настроек)
  * 199       1        время до "рассвета" (dawnMode)
@@ -55,7 +57,7 @@
  *
  * Не используются адреса:
  * 96-110    15       резерв, можно добавить ещё 5 эффектов
- * 142-195   54       если добавить ещё 5 эффектов, начальный адрес неиспользуемой памяти сдвинется с 142 на 147
+ * 142-194   53       если добавить ещё 5 эффектов, начальный адрес неиспользуемой памяти сдвинется с 142 на 147
 */
 
 #include <EEPROM.h>
@@ -64,6 +66,7 @@
 #define EEPROM_ALARM_START_ADDRESS           (0U)           // начальный адрес в EEPROM памяти для записи настроек будильников
 #define EEPROM_MODES_START_ADDRESS           (21U)          // начальный адрес в EEPROM памяти для записи настроек эффектов (яркость, скорость, масштаб)
 #define EEPROM_FAVORITES_START_ADDRESS       (111U)         // начальный адрес в EEPROM памяти для записи настроек режима избранных эффектов
+#define EEPROM_ESP_BUTTON_ENABLED_ADDRESS    (195U)         // адрес в EEPROM памяти для записи признака разблокированной кнопки
 #define EEPROM_ESP_MODE                      (196U)         // адрес в EEPROM памяти для записи режима работы модуля ESP (точка доступа/WiFi клиент)
 #define EEPROM_LAMP_ON_ADDRESS               (197U)         // адрес в EEPROM памяти для записи состояния лампы (вкл/выкл)
 #define EEPROM_FIRST_RUN_ADDRESS             (198U)         // адрес в EEPROM памяти для записи признака первого запуска (определяет необходимость первоначальной записи всех хранимых настроек)
@@ -73,14 +76,14 @@
 #define EEPROM_ALARM_STRUCT_SIZE             (3U)           // 1 байт - вкл/выкл; 2 байта - время от начала суток в минутах (0 - 1440)
 #define EEPROM_MODE_STRUCT_SIZE              (3U)           // 1 байт - яркость; 1 байт - скорость; 1 байт - масштаб
 
-#define EEPROM_FIRST_RUN_MARK                (23U)          // счисло-метка, если ещё не записно в EEPROM_FIRST_RUN_ADDRESS, значит нужно проинициализировать EEPROM и записать все первоначальные настройки
+#define EEPROM_FIRST_RUN_MARK                (24U)          // счисло-метка, если ещё не записно в EEPROM_FIRST_RUN_ADDRESS, значит нужно проинициализировать EEPROM и записать все первоначальные настройки
 #define EEPROM_WRITE_DELAY                   (30000UL)      // отсрочка записи в EEPROM после последнего изменения хранимых настроек, позволяет уменьшить количество операций записи в EEPROM
 
 
 class EepromManager
 {
   public:
-    static void InitEepromSettings(ModeType modes[], AlarmType alarms[], uint8_t* espMode, bool* onFlag, uint8_t* dawnMode, int8_t* currentMode,
+    static void InitEepromSettings(ModeType modes[], AlarmType alarms[], uint8_t* espMode, bool* onFlag, uint8_t* dawnMode, int8_t* currentMode, bool* buttonEnabled,
       void (*readFavoritesSettings)(), void (*saveFavoritesSettings)())
     {
       // записываем в EEPROM начальное состояние настроек, если их там ещё нет
@@ -109,6 +112,7 @@ class EepromManager
         EEPROM.write(EEPROM_LAMP_ON_ADDRESS, 0);
         EEPROM.write(EEPROM_DAWN_MODE_ADDRESS, 0);
         EEPROM.write(EEPROM_CURRENT_MODE_ADDRESS, 0);
+        EEPROM.write(EEPROM_ESP_BUTTON_ENABLED_ADDRESS, 1);
 
         saveFavoritesSettings();
     
@@ -133,6 +137,7 @@ class EepromManager
       *onFlag = (bool)EEPROM.read(EEPROM_LAMP_ON_ADDRESS);
       *dawnMode = EEPROM.read(EEPROM_DAWN_MODE_ADDRESS);
       *currentMode = EEPROM.read(EEPROM_CURRENT_MODE_ADDRESS);
+      *buttonEnabled = EEPROM.read(EEPROM_ESP_BUTTON_ENABLED_ADDRESS);
     }
 
     static void SaveModesSettings(int8_t* currentMode, ModeType modes[])
@@ -180,6 +185,12 @@ class EepromManager
     static void SaveDawnMode(uint8_t* dawnMode)
     {
       EEPROM.write(EEPROM_DAWN_MODE_ADDRESS, *dawnMode);
+      EEPROM.commit();
+    }
+
+    static void SaveButtonEnabled(bool* buttonEnabled)
+    {
+      EEPROM.write(EEPROM_ESP_BUTTON_ENABLED_ADDRESS, *buttonEnabled);
       EEPROM.commit();
     }
 
