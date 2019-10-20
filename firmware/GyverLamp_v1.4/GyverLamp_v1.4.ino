@@ -94,6 +94,8 @@
   -  * периодически - определяется константой PRINT_TIME в Constants.h - от раза в час (красным цветом) до раза в минуту (синим цветом) с яркостью текущего эффекта как при включенной, так и при выключенной матрице
   --- 19.10.2019
   - Добавлены "ночные часы" (от NIGHT_HOURS_START до NIGHT_HOURS_STOP включительно) и "дневные часы" (всё остальное время), для которых доступна регулировка яркости для вывода времени бегущей строкой - NIGHT_HOURS_BRIGHTNESS и DAY_HOURS_BRIGHTNESS
+  --- 20.10.2019
+  - Добавлена блокировка кнопки на лампе из приложения; сохраняется в EEPROM память
 */
 
 // Ссылка для менеджера плат:
@@ -189,6 +191,7 @@ bool loadingFlag = true;
 bool ONflag = false;
 uint32_t eepromTimeout;
 bool settChanged = false;
+bool buttonEnabled = true;
 
 unsigned char matrixValue[8][16];
 
@@ -235,6 +238,8 @@ void setup()
       wifiManager.resetSettings();                          // сброс сохранённых SSID и пароля при старте с зажатой кнопкой, если разрешено
       LOG.println(F("Настройки WiFiManager сброшены"));
     }
+    buttonEnabled = true;                                   // при сбросе параметров WiFi сразу после старта с зажатой кнопкой, также разблокируется кнопка, если была заблокирована раньше
+    EepromManager::SaveButtonEnabled(&buttonEnabled);
     ESP.wdtFeed();
     #endif
   #endif
@@ -253,7 +258,7 @@ void setup()
 
   // EEPROM
   EepromManager::InitEepromSettings(                        // инициализация EEPROM; запись начального состояния настроек, если их там ещё нет; инициализация настроек лампы значениями из EEPROM
-    modes, alarms, &espMode, &ONflag, &dawnMode, &currentMode,
+    modes, alarms, &espMode, &ONflag, &dawnMode, &currentMode, &buttonEnabled,
     &(FavoritesManager::ReadFavoritesFromEeprom),
     &(FavoritesManager::SaveFavoritesToEeprom));
   LOG.printf_P(PSTR("Рабочий режим лампы: ESP_MODE = %d\n"), espMode);
@@ -373,7 +378,10 @@ void loop()
   #endif
 
   #ifdef ESP_USE_BUTTON
-  buttonTick();
+  if (buttonEnabled)
+  {
+    buttonTick();
+  }
   #endif
 
   #ifdef OTA

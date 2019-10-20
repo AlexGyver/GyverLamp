@@ -26,7 +26,7 @@ void timerMinim::setInterval(uint32_t interval)
 
 bool timerMinim::isReady()
 {
-  if ((long)millis() - _timer >= _interval)
+  if ((uint32_t)millis() - _timer >= _interval)
   {
     _timer = millis();
     return true;

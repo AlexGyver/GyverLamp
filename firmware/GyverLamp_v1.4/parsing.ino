@@ -290,6 +290,30 @@ void processInputBuffer(char *inputBuffer, char *outputBuffer, bool generateOutp
       #endif
     }
 
+    else if (!strncmp_P(inputBuffer, PSTR("BTN"), 3))
+    {
+      if (strstr_P(inputBuffer, PSTR("ON")) - inputBuffer == 4)
+      {
+        buttonEnabled = true;
+        EepromManager::SaveButtonEnabled(&buttonEnabled);
+        sendCurrent(inputBuffer);
+      }
+      else if (strstr_P(inputBuffer, PSTR("OFF")) - inputBuffer == 4)
+      {
+        buttonEnabled = false;
+        EepromManager::SaveButtonEnabled(&buttonEnabled);
+        sendCurrent(inputBuffer);
+      }
+
+      #if (USE_MQTT)
+      if (espMode == 1U)
+      {
+        strcpy(MqttManager::mqttBuffer, inputBuffer);
+        MqttManager::needToPublish = true;
+      }
+      #endif
+    }
+
     else
     {
       inputBuffer[0] = '\0';
@@ -324,6 +348,7 @@ void sendCurrent(char *outputBuffer)
   #endif
 
   sprintf_P(outputBuffer, PSTR("%s %u"), outputBuffer, (uint8_t)TimerManager::TimerRunning);
+  sprintf_P(outputBuffer, PSTR("%s %u"), outputBuffer, (uint8_t)buttonEnabled);
 
   #ifdef USE_NTP
   sprintf_P(outputBuffer, PSTR("%s %s"), outputBuffer, timeClient.getFormattedTime().c_str());

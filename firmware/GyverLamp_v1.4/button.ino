@@ -6,6 +6,11 @@ static bool startButtonHolding = false;                     // флаг: кно�
 
 void buttonTick()
 {
+  if (!buttonEnabled)                                       // события кнопки не обрабатываются, если она заблокирована
+  {
+    return;
+  }
+
   touch.tick();
   uint8_t clickCount = touch.hasClicks() ? touch.getClicks() : 0U;
 
