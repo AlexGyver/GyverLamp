@@ -694,9 +694,9 @@ void whiteColorStripeRoutine()
 // ------------- мигающий цвет (не эффект! используется для отображения краткосрочного предупреждения; блокирующий код!) -------------
 #define WARNING_BRIGHTNESS    (10U)                         // яркость вспышки
 void showWarning(
-  CRGB color,                                               // цвет вспышки
-  uint32_t duration,                                        // продолжительность отображения предупреждения (общее время)
-  uint16_t blinkHalfPeriod)                                 // продолжительность одной вспышки в миллисекундах (полупериод)
+  CRGB color,                                               /* цвет вспышки                                                 */
+  uint32_t duration,                                        /* продолжительность отображения предупреждения (общее время)   */
+  uint16_t blinkHalfPeriod)                                 /* продолжительность одной вспышки в миллисекундах (полупериод) */
 {
   uint32_t blinkTimer = millis();
   enum BlinkState { OFF = 0, ON = 1 } blinkState = BlinkState::OFF;
