@@ -95,6 +95,13 @@ void timeTick()
           delay(1);
           FastLED.show();
           dawnFlag = true;
+
+          #if defined(ALARM_PIN) && defined(ALARM_LEVEL)                  // установка сигнала в пин, управляющий будильником
+          if (thisTime == alarms[thisDay].Time)                           // установка, только в минуту, на которую заведён будильник
+          {
+            digitalWrite(ALARM_PIN, ALARM_LEVEL);
+          }
+          #endif
         }
       }
       else
@@ -115,6 +122,10 @@ void timeTick()
         dawnColorMinus4 = CHSV(0, 0, 0);
         dawnColorMinus5 = CHSV(0, 0, 0);
         dawnCounter = 0;
+
+        #if defined(ALARM_PIN) && defined(ALARM_LEVEL)                    // установка сигнала в пин, управляющий будильником
+        digitalWrite(ALARM_PIN, !ALARM_LEVEL);
+        #endif
       }
     }
   }

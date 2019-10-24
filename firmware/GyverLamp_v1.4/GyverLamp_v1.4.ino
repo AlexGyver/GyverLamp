@@ -96,6 +96,9 @@
   - Добавлены "ночные часы" (от NIGHT_HOURS_START до NIGHT_HOURS_STOP включительно) и "дневные часы" (всё остальное время), для которых доступна регулировка яркости для вывода времени бегущей строкой - NIGHT_HOURS_BRIGHTNESS и DAY_HOURS_BRIGHTNESS
   --- 20.10.2019
   - Добавлена блокировка кнопки на лампе из android приложения; сохраняется в EEPROM память
+  --- 24.10.2019
+  - Добавлен вывод сигнала (HIGH/LOW - настраивается константой MOSFET_LEVEL) синхронно с включением матрицы на пин MOSFET транзистора (настраивается константой MOSFET_PIN)
+  - Добавлен вывод сигнала (HIGH/LOW - настраивается константой ALARM_LEVEL) на пин будильника (настраивается константой ALARM_PIN); сигнал подаётся в течение одной минуты, начиная со времени, на которое заведён будильник
 */
 
 // Ссылка для менеджера плат:
@@ -213,6 +216,22 @@ void setup()
   Serial.begin(115200);
   Serial.println();
   ESP.wdtEnable(WDTO_8S);
+
+
+  // ПИНЫ
+  #ifdef MOSFET_PIN                                         // инициализация пина, управляющего MOSFET транзистором в состояние "выключен"
+  pinMode(MOSFET_PIN, OUTPUT);
+  #ifdef MOSFET_LEVEL
+  digitalWrite(MOSFET_PIN, !MOSFET_LEVEL);
+  #endif
+  #endif
+
+  #ifdef ALARM_PIN                                          // инициализация пина, управляющего будильником в состояние "выключен"
+  pinMode(ALARM_PIN, OUTPUT);
+  #ifdef ALARM_LEVEL
+  digitalWrite(ALARM_PIN, !ALARM_LEVEL);
+  #endif
+  #endif
 
 
   // TELNET
