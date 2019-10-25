@@ -1,4 +1,6 @@
-// мини-класс таймера, версия 1.0
+// мини-класс таймера, версия 2.0
+// использован улучшенный алгоритм таймера на millis
+// алгоритм чуть медленнее, но обеспечивает кратные интервалы и защиту от пропусков и переполнений
 
 class timerMinim
 {
@@ -23,8 +25,12 @@ void timerMinim::setInterval(uint32_t interval) {
 }
 
 boolean timerMinim::isReady() {
-  if ((long)millis() - _timer >= _interval) {
-    _timer = millis();
+  uint32_t thisMls = millis();
+  if (thisMls - _timer >= _interval) {
+    do {
+      _timer += _interval;
+      if (_timer < _interval) break;          // переполнение uint32_t
+    } while (_timer < thisMls - _interval);  // защита от пропуска шага
     return true;
   } else {
     return false;

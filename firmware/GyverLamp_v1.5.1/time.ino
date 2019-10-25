@@ -18,7 +18,7 @@ void timeTick() {
         }
       }
 
-      if (minuteCounter > 5) {    // синхронизация каждые 5 минут
+      if (minuteCounter > 30 && WiFi.status() == WL_CONNECTED) {    // синхронизация каждые 30 минут
         minuteCounter = 0;
         if (timeClient.update()) {
           hrs = timeClient.getHours();
