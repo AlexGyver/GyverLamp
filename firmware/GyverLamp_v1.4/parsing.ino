@@ -48,7 +48,8 @@ void processInputBuffer(char *inputBuffer, char *outputBuffer, bool generateOutp
     if (!strncmp_P(inputBuffer, PSTR("DEB"), 3))
     {
         #ifdef USE_NTP
-        sprintf_P(inputBuffer, PSTR("%s%s"), PSTR("OK "), timeClient.getFormattedTime().c_str());
+        getFormattedTime(inputBuffer);
+        sprintf_P(inputBuffer, PSTR("OK %s"), inputBuffer);
         #else
         strcpy_P(inputBuffer, PSTR("OK --:--"));
         #endif
@@ -351,9 +352,12 @@ void sendCurrent(char *outputBuffer)
   sprintf_P(outputBuffer, PSTR("%s %u"), outputBuffer, (uint8_t)buttonEnabled);
 
   #ifdef USE_NTP
-  sprintf_P(outputBuffer, PSTR("%s %s"), outputBuffer, timeClient.getFormattedTime().c_str());
+  char timeBuf[9];
+  getFormattedTime(timeBuf);
+  sprintf_P(outputBuffer, PSTR("%s %s"), outputBuffer, timeBuf);
   #else
-  sprintf_P(outputBuffer, PSTR("%s %ull"), outputBuffer, millis());
+  time_t currentTicks = millis() / 1000UL;
+  sprintf_P(outputBuffer, PSTR("%s %02u:%02u:%02u"), outputBuffer, hour(currentTicks), minute(currentTicks), second(currentTicks));
   #endif
 }
 

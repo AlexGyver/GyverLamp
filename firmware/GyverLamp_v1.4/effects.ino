@@ -77,7 +77,7 @@ static const uint8_t hueMask[8][16] PROGMEM =
   {0 , 0 , 0 , 1 , 1 , 0 , 0 , 0 , 0 , 0 , 0 , 1 , 1 , 0 , 0 , 0 }
 };
 
-void fireRoutine()
+void fireRoutine(bool isColored)                            // true - цветной огонь, false - белый
 {
   if (loadingFlag)
   {
@@ -92,7 +92,7 @@ void fireRoutine()
     generateLine();
     pcnt = 0;
   }
-  drawFrame(pcnt);
+  drawFrame(pcnt, isColored);
   pcnt += 30;
 }
 
@@ -129,7 +129,7 @@ void shiftUp()
 // draw a frame, interpolating between 2 "key frames"
 // @param pcnt percentage of interpolation
 
-void drawFrame(uint8_t pcnt)
+void drawFrame(uint8_t pcnt, bool isColored)
 {
   int32_t nextv;
 
@@ -148,9 +148,9 @@ void drawFrame(uint8_t pcnt)
           - pgm_read_byte(&valueMask[y][newX]);
 
         CRGB color = CHSV(
-          modes[EFF_FIRE].Scale * 2.5 + pgm_read_byte(&hueMask[y][newX]),            // H
-          255U,                                                                      // S
-          (uint8_t)max(0, nextv)                                                     // V
+          isColored ? modes[EFF_FIRE].Scale * 2.5 + pgm_read_byte(&hueMask[y][newX]) : 0U,     // H
+          isColored ? 255U : 0U,                                                               // S
+          (uint8_t)max(0, nextv)                                                               // V
         );
 
         leds[getPixelNumber(x, y)] = color;
@@ -176,9 +176,9 @@ void drawFrame(uint8_t pcnt)
     uint8_t newX = x;
     if (x > 15U) newX = x % 16U;
     CRGB color = CHSV(
-      modes[EFF_FIRE].Scale * 2.5 + pgm_read_byte(&(hueMask[0][newX])),              // H
-      255,                                                                           // S
-      (uint8_t)(((100.0 - pcnt) * matrixValue[0][newX] + pcnt * line[newX]) / 100.0) // V
+      isColored ? modes[EFF_FIRE].Scale * 2.5 + pgm_read_byte(&(hueMask[0][newX])): 0U,        // H
+      isColored ? 255U : 0U,                                                                   // S
+      (uint8_t)(((100.0 - pcnt) * matrixValue[0][newX] + pcnt * line[newX]) / 100.0)           // V
     );
     //leds[getPixelNumber(newX, 0)] = color;                                         // на форуме пишут что это ошибка - вместо newX должно быть x, иначе
     leds[getPixelNumber(x, 0)] = color;                                              // на матрицах шире 16 столбцов нижний правый угол неработает

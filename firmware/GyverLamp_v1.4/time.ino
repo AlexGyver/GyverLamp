@@ -12,7 +12,6 @@
                                                                           // при ошибках повторной синхронизации времени функции будильника отключаться не будут
 #define RESOLVE_TIMEOUT       (1500UL)                                    // таймаут ожидания подключения к интернету в миллисекундах (1,5 секунды)
 uint64_t lastResolveTryMoment = 0UL;
-bool timeSynched = false;
 IPAddress ntpServerIp = {0, 0, 0, 0};
 static CHSV dawnColor = CHSV(0, 0, 0);                                    // цвет "рассвета"
 static CHSV dawnColorMinus1 = CHSV(0, 0, 0);                              // для большей плавности назначаем каждый новый цвет только 1/10 всех диодов; каждая следующая 1/10 часть будет "оставать" на 1 шаг
@@ -48,19 +47,20 @@ void timeTick()
         }
       }
 
-      timeSynched = timeSynched || timeClient.update();                   // если время хотя бы один раз было синхронизировано, продолжаем
+      timeSynched = timeClient.update() || timeSynched;                   // если время хотя бы один раз было синхронизировано, продолжаем
       if (!timeSynched)                                                   // если время не было синхронизиировано ни разу, отключаем будильник до тех пор, пока оно не будет синхронизировано
       {
         return;
       }
 
-      uint8_t thisDay = timeClient.getDay();
-      if (thisDay == 0) thisDay = 7;                                      // воскресенье это 0
-      thisDay--;
-      thisTime = timeClient.getHours() * 60 + timeClient.getMinutes();
-      uint32_t thisFullTime = timeClient.getHours() * 3600 + timeClient.getMinutes() * 60 + timeClient.getSeconds();
+      time_t currentLocalTime = localTimeZone.toLocal(timeClient.getEpochTime());
+      uint8_t thisDay = dayOfWeek(currentLocalTime);
+      if (thisDay == 1) thisDay = 8;                                      // в библиотеке Time воскресенье - это 1; приводим к диапазону [0..6], где воскресенье - это 6
+      thisDay -= 2;
+      thisTime = hour(currentLocalTime) * 60 + minute(currentLocalTime);
+      uint32_t thisFullTime = hour(currentLocalTime) * 3600 + minute(currentLocalTime) * 60 + second(currentLocalTime);
 
-      printTime(thisTime, false, ONflag);
+      printTime(thisTime, false, ONflag);                                 // проверка текущего времени и его вывод (если заказан и если текущее время соответстует заказанному расписанию вывода)
 
       // проверка рассвета
       if (alarms[thisDay].State &&                                                                                          // день будильника
@@ -95,14 +95,14 @@ void timeTick()
           delay(1);
           FastLED.show();
           dawnFlag = true;
-
-          #if defined(ALARM_PIN) && defined(ALARM_LEVEL)                  // установка сигнала в пин, управляющий будильником
-          if (thisTime == alarms[thisDay].Time)                           // установка, только в минуту, на которую заведён будильник
-          {
-            digitalWrite(ALARM_PIN, ALARM_LEVEL);
-          }
-          #endif
         }
+
+        #if defined(ALARM_PIN) && defined(ALARM_LEVEL)                    // установка сигнала в пин, управляющий будильником
+        if (thisTime == alarms[thisDay].Time)                             // установка, только в минуту, на которую заведён будильник
+        {
+          digitalWrite(ALARM_PIN, manualOff ? !ALARM_LEVEL : ALARM_LEVEL);// установка сигнала в зависимости от того, был ли отключен будильник вручную
+        }
+        #endif
       }
       else
       {
@@ -161,5 +161,11 @@ void resolveNtpServerAddress(bool &ntpServerAddressResolved)              // ф�
 
     ntpServerAddressResolved = true;
   }
+}
+
+void getFormattedTime(char *buf)
+{
+  time_t currentLocalTime = localTimeZone.toLocal(timeClient.getEpochTime());
+  sprintf_P(buf, PSTR("%02u:%02u:%02u"), hour(currentLocalTime), minute(currentLocalTime), second(currentLocalTime));
 }
 #endif

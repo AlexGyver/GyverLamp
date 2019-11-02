@@ -10,7 +10,8 @@ void effectsTick()
       switch (currentMode)
       {
         case EFF_SPARKLES:       sparklesRoutine();           break;
-        case EFF_FIRE:           fireRoutine();               break;
+        case EFF_FIRE:           fireRoutine(true);           break;
+        case EFF_WHITTE_FIRE:    fireRoutine(false);          break;
         case EFF_RAINBOW_VER:    rainbowVerticalRoutine();    break;
         case EFF_RAINBOW_HOR:    rainbowHorizontalRoutine();  break;
         case EFF_RAINBOW_DIAG:   rainbowDiagonalRoutine();    break;
