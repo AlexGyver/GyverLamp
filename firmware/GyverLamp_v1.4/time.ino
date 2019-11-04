@@ -103,6 +103,10 @@ void timeTick()
           digitalWrite(ALARM_PIN, manualOff ? !ALARM_LEVEL : ALARM_LEVEL);// установка сигнала в зависимости от того, был ли отключен будильник вручную
         }
         #endif
+
+        #if defined(MOSFET_PIN) && defined(MOSFET_LEVEL)                  // установка сигнала в пин, управляющий MOSFET транзистором, матрица должна быть включена на время работы будильника
+        digitalWrite(MOSFET_PIN, MOSFET_LEVEL);
+        #endif
       }
       else
       {
@@ -125,6 +129,10 @@ void timeTick()
 
         #if defined(ALARM_PIN) && defined(ALARM_LEVEL)                    // установка сигнала в пин, управляющий будильником
         digitalWrite(ALARM_PIN, !ALARM_LEVEL);
+        #endif
+
+        #if defined(MOSFET_PIN) && defined(MOSFET_LEVEL)                  // установка сигнала в пин, управляющий MOSFET транзистором, соответственно состоянию вкл/выкл матрицы
+        digitalWrite(MOSFET_PIN, ONflag ? MOSFET_LEVEL : !MOSFET_LEVEL);
         #endif
       }
     }
