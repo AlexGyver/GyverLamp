@@ -137,7 +137,17 @@ void printTime(uint32_t thisTime, bool onDemand, bool ONflag) // периоди�
     loadingFlag = true;
     FastLED.setBrightness(getBrightnessForPrintTime(thisTime, ONflag));
     delay(1);
+
+    #if defined(MOSFET_PIN) && defined(MOSFET_LEVEL)        // установка сигнала в пин, управляющий MOSFET транзистором, матрица должна быть включена на время вывода текста
+    digitalWrite(MOSFET_PIN, MOSFET_LEVEL);
+    #endif
+
     while (!fillString(stringTime, letterColor)) { delay(1); ESP.wdtFeed(); }
+
+    #if defined(MOSFET_PIN) && defined(MOSFET_LEVEL)        // установка сигнала в пин, управляющий MOSFET транзистором, соответственно состоянию вкл/выкл матрицы или будильника
+    digitalWrite(MOSFET_PIN, ONflag || (dawnFlag && !manualOff) ? MOSFET_LEVEL : !MOSFET_LEVEL);
+    #endif
+
     loadingFlag = true;
   }
 
