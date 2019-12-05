@@ -3,8 +3,8 @@
 #include "EepromManager.h"
 #include "Constants.h"
 
-#define DEFAULT_FAVORITES_INTERVAL           (300U)         // значение по умолчанию для интервала переключения избпранных эффектов в секундах
-#define DEFAULT_FAVORITES_DISPERSION         (0U)           // значение по умолчанию для разброса интервала переключения избпранных эффектов в секундах
+#define DEFAULT_FAVORITES_INTERVAL           (300U)         // значение по умолчанию для интервала переключения избранных эффектов в секундах
+#define DEFAULT_FAVORITES_DISPERSION         (0U)           // значение по умолчанию для разброса интервала переключения избранных эффектов в секундах
 
 
 class FavoritesManager

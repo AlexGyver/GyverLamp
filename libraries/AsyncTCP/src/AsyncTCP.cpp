@@ -78,9 +78,20 @@ typedef struct {
 
 static xQueueHandle _async_queue;
 static TaskHandle_t _async_service_task_handle = NULL;
+
+
+SemaphoreHandle_t _slots_lock;
 const int _number_of_closed_slots = CONFIG_LWIP_MAX_ACTIVE_TCP;
-static int _closed_index = 0;
-static int _closed_slots[_number_of_closed_slots];
+static uint32_t _closed_slots[_number_of_closed_slots];
+static uint32_t _closed_index = []() {
+    _slots_lock = xSemaphoreCreateBinary();
+    xSemaphoreGive(_slots_lock);
+    for (int i = 0; i < _number_of_closed_slots; ++ i) {
+        _closed_slots[i] = 1;
+    }
+    return 1;
+}();
+
 
 static inline bool _init_async_event_queue(){
     if(!_async_queue){
@@ -141,7 +152,10 @@ static bool _remove_events_with_arg(void * arg){
 }
 
 static void _handle_async_event(lwip_event_packet_t * e){
-    if(e->event == LWIP_TCP_CLEAR){
+    if(e->arg == NULL){
+        // do nothing when arg is NULL
+        //ets_printf("event arg == NULL: 0x%08x\n", e->recv.pcb);
+    } else if(e->event == LWIP_TCP_CLEAR){
         _remove_events_with_arg(e->arg);
     } else if(e->event == LWIP_TCP_RECV){
         //ets_printf("-R: 0x%08x\n", e->recv.pcb);
@@ -554,23 +568,7 @@ AsyncClient::AsyncClient(tcp_pcb* pcb)
     _pcb = pcb;
     _closed_slot = -1;
     if(_pcb){
-        _closed_slot = 0;
-        if (_closed_index == 0) {
-            _closed_index = 1;
-            for (int i = 0; i < _number_of_closed_slots; ++ i) {
-                _closed_slots[i] = 1;
-            }
-        } else {
-            int closed_slot_min_index = _closed_slots[0];
-            for (int i = 0; i < _number_of_closed_slots; ++ i) {
-                if (_closed_slots[i] <= closed_slot_min_index && _closed_slots[i] != 0) {
-                    closed_slot_min_index = _closed_slots[i];
-                    _closed_slot = i;
-                }
-            }
-        }
-        _closed_slots[_closed_slot] = 0;
-
+        _allocate_closed_slot();
         _rx_last_packet = millis();
         tcp_arg(_pcb, this);
         tcp_recv(_pcb, &_tcp_recv);
@@ -584,6 +582,7 @@ AsyncClient::~AsyncClient(){
     if(_pcb) {
         _close();
     }
+    _free_closed_slot();
 }
 
 /*
@@ -709,7 +708,6 @@ bool AsyncClient::connect(const char* host, uint16_t port){
     ip_addr_t addr;
     
     if(!_start_async_task()){
-      Serial.println("failed to start task");
       log_e("failed to start task");
       return false;
     }
@@ -820,6 +818,29 @@ int8_t AsyncClient::_close(){
     return err;
 }
 
+void AsyncClient::_allocate_closed_slot(){
+    xSemaphoreTake(_slots_lock, portMAX_DELAY);
+    uint32_t closed_slot_min_index = 0;
+    for (int i = 0; i < _number_of_closed_slots; ++ i) {
+        if ((_closed_slot == -1 || _closed_slots[i] <= closed_slot_min_index) && _closed_slots[i] != 0) {
+            closed_slot_min_index = _closed_slots[i];
+            _closed_slot = i;
+        }
+    }
+    if (_closed_slot != -1) {
+        _closed_slots[_closed_slot] = 0;
+    }
+    xSemaphoreGive(_slots_lock);
+}
+
+void AsyncClient::_free_closed_slot(){
+    if (_closed_slot != -1) {
+        _closed_slots[_closed_slot] = _closed_index;
+        _closed_slot = -1;
+        ++ _closed_index;
+    }
+}
+
 /*
  * Private Callbacks
  * */
@@ -842,10 +863,12 @@ int8_t AsyncClient::_connected(void* pcb, int8_t err){
 void AsyncClient::_error(int8_t err) {
     if(_pcb){
         tcp_arg(_pcb, NULL);
-        tcp_sent(_pcb, NULL);
-        tcp_recv(_pcb, NULL);
-        tcp_err(_pcb, NULL);
-        tcp_poll(_pcb, NULL, 0);
+        if(_pcb->state == LISTEN) {
+            tcp_sent(_pcb, NULL);
+            tcp_recv(_pcb, NULL);
+            tcp_err(_pcb, NULL);
+            tcp_poll(_pcb, NULL, 0);
+        }
         _pcb = NULL;
     }
     if(_error_cb) {
@@ -863,15 +886,16 @@ int8_t AsyncClient::_lwip_fin(tcp_pcb* pcb, int8_t err) {
         return ERR_OK;
     }
     tcp_arg(_pcb, NULL);
-    tcp_sent(_pcb, NULL);
-    tcp_recv(_pcb, NULL);
-    tcp_err(_pcb, NULL);
-    tcp_poll(_pcb, NULL, 0);
+    if(_pcb->state == LISTEN) {
+        tcp_sent(_pcb, NULL);
+        tcp_recv(_pcb, NULL);
+        tcp_err(_pcb, NULL);
+        tcp_poll(_pcb, NULL, 0);
+    }
     if(tcp_close(_pcb) != ERR_OK) {
         tcp_abort(_pcb);
     }
-    _closed_slots[_closed_slot] = _closed_index;
-    ++ _closed_index;
+    _free_closed_slot();
     _pcb = NULL;
     return ERR_OK;
 }
