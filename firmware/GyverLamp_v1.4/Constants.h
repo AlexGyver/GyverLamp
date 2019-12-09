@@ -145,9 +145,9 @@ bool telnetGreetingShown = false;                           // признак "�
 #endif
 
 // --- БИБЛИОТЕКИ ----------------------
-#define FASTLED_INTERRUPT_RETRY_COUNT   (0U)
-#define FASTLED_ALLOW_INTERRUPTS        (0U)
-#define FASTLED_ESP8266_RAW_PIN_ORDER
+#define FASTLED_INTERRUPT_RETRY_COUNT   (0)                 // default: 2; // Use this to determine how many times FastLED will attempt to re-transmit a frame if interrupted for too long by interrupts
+//#define FASTLED_ALLOW_INTERRUPTS      (1)                 // default: 1; // Use this to force FastLED to allow interrupts in the clockless chipsets (or to force it to disallow), overriding the default on platforms that support this. Set the value to 1 to allow interrupts or 0 to disallow them.
+#define FASTLED_ESP8266_RAW_PIN_ORDER                       // FASTLED_ESP8266_RAW_PIN_ORDER, FASTLED_ESP8266_D1_PIN_ORDER or FASTLED_ESP8266_NODEMCU_PIN_ORDER
 
 #define NUM_LEDS              (uint16_t)(WIDTH * HEIGHT)
 #define SEGMENTS              (1U)                          // диодов в одном "пикселе" (для создания матрицы из кусков ленты)
