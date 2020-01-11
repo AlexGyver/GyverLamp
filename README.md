@@ -48,14 +48,47 @@
 <a id="chapter-3"></a>
 ## Материалы и компоненты
 ### Ссылки оставлены на магазины, с которых я закупаюсь уже не один год
-* NodeMCU http://ali.ski/RgD5P  http://ali.ski/_1FJZ
-* Wemos D1 mini http://ali.ski/FuTgbO  http://ali.ski/Z9feWU
-* Матрица 16x16 http://ali.ski/BCKQT  http://ali.ski/bRW14  http://ali.ski/X-tBrQ
-* Адресная лента (для DIY матрицы) http://ali.ski/2dmOe_  http://ali.ski/rqgqdq  http://ali.ski/4Ma9iH
-* Сенсорная кнопка http://ali.ski/aWQBAa  http://ali.ski/rsOrSB
-* БП 5V (брать 3A минимум) http://ali.ski/K-CThT  http://ali.ski/3UWXJ
-* Проводочки http://ali.ski/JQRler  http://ali.ski/_SuCF
-* Плафон https://leroymerlin.ru/product/plafon-cilindr-18212968/
+Wemos D1 mini – искать
+* https://ali.ski/aKZs9
+* https://ali.ski/uPoqu
+* https://ali.ski/-VjNuh
+* https://ali.ski/Avqtk
+NodeMCU – искать
+* https://ali.ski/yDIl0Z
+* https://ali.ski/UTwAyZ
+Матрица 16×16 – искать
+* https://ali.ski/pOMcck
+* https://ali.ski/nSJCP
+* https://ali.ski/hI6tov
+* https://ali.ski/ZSliU7
+* Матрица 8×8 купить в РФ
+Адресная лента (для DIY матрицы)
+* https://ali.ski/crrqi1
+* https://ali.ski/2I3be
+* Купить в РФ, 60 свет/метр, 30 свет/метр
+* Black PCB / White PCB – цвет подложки ленты, чёрная / белая. В видео была чёрная
+* 1m/5m – длина ленты в метрах (чтобы заказать 2 метра, берите два заказа 1m, очевидно)
+* 30/60/74/96/100/144 – количество светодиодов на 1 метр ленты. В видео использовалась лента 60 диодов на метр
+* IP30 лента без влагозащиты (как на видео)
+* IP65 лента покрыта силиконом
+* IP67 лента полностью в силиконовом коробе
+* Постфикс ECO – лента чуть более низкого качества, меньше меди, на длинной ленте будет сильно проседать яркость
+Сенсорная кнопка – искать
+* http://ali.ski/aWQBAa
+* http://ali.ski/rsOrSB
+* БП 5V искать (минимум 3A на каждые 100 LED)
+* https://ali.ski/DItEG
+* https://ali.ski/t3YFfU
+* Мощные https://ali.ski/7Jg69
+* Мощные https://ali.ski/NGDrjQ
+* БП 60W (купить в РФ)
+* БП 100W (купить в РФ)
+Проводочки – искать
+* http://ali.ski/_SuCF
+Сантех
+* Труба D50 длина 250
+* Труба D40 короткая
+* Заглушка D40
 
 ## Вам скорее всего пригодится
 * [Всё для пайки (паяльники и примочки)](http://alexgyver.ru/all-for-soldering/)
