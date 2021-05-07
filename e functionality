@@ -1,0 +1,194 @@
+[33mcommit 1316f2e83c67865c38c296dea4e02b69bb755774[m[33m ([m[1;36mHEAD -> [m[1;32mmaster[m[33m)[m
+Author: Anton Pahodzin <apahodzin@scnsoft.com>
+Date:   Fri May 7 11:41:38 2021 +0300
+
+    feat: add base functionality
+
+[33mcommit 37f64a5eb045f923bc8ba5629d9ce6ce5aa7c114[m[33m ([m[1;31morigin/master[m[33m, [m[1;31morigin/HEAD[m[33m)[m
+Merge: 6214707 1a22ee1
+Author: Alex <beragumbo@ya.ru>
+Date:   Tue Jun 9 14:02:30 2020 +0300
+
+    Merge pull request #21 from AlexGyver/add-license-1
+    
+    Create LICENSE
+
+[33mcommit 1a22ee1bc0c705322d2475afe1ca366cbaaca9af[m[33m ([m[1;31morigin/add-license-1[m[33m)[m
+Author: Alex <beragumbo@ya.ru>
+Date:   Tue Jun 9 14:02:20 2020 +0300
+
+    Create LICENSE
+
+[33mcommit 6214707052a3cb402cdb20d4f1d02e9bc0dd9258[m
+Author: Alex <beragumbo@ya.ru>
+Date:   Sat Jan 11 21:06:33 2020 +0300
+
+    Update README.md
+
+[33mcommit 08c6eb6d7b317fa781ec9279c63e16a74f3ce24c[m
+Author: Alex <beragumbo@ya.ru>
+Date:   Thu Nov 14 14:17:02 2019 +0300
+
+    add
+
+[33mcommit 4ae5b205fc68e85db2338bfe7579d01ecc2a4d32[m
+Author: Alex <beragumbo@ya.ru>
+Date:   Tue Nov 12 02:26:22 2019 +0300
+
+    add
+
+[33mcommit 1940675b5f02ce737b73e655d0ad81e318816e68[m
+Author: Alex <beragumbo@ya.ru>
+Date:   Mon Nov 11 01:01:24 2019 +0300
+
+    add
+
+[33mcommit 4f8379f8af6254634fe1dbe062258efa9cf52dfd[m
+Author: Alex <beragumbo@ya.ru>
+Date:   Sun Nov 10 15:32:41 2019 +0300
+
+    upd
+
+[33mcommit 6ef6e1082166d2c7d4e4bcd221b8eaadf435f7e9[m
+Author: Alex <beragumbo@ya.ru>
+Date:   Fri Oct 25 15:16:28 2019 +0300
+
+    upd
+
+[33mcommit 7e5a8a4770fca8f86aa259de0d9d903e718b5a22[m
+Author: Alex <beragumbo@ya.ru>
+Date:   Fri Oct 25 15:06:58 2019 +0300
+
+    upd
+
+[33mcommit f1e019bba59ea2901a625f15a3c5ee49202d5bdb[m
+Author: Alex <beragumbo@ya.ru>
+Date:   Sat Sep 21 11:11:49 2019 +0300
+
+    move
+
+[33mcommit 2d25ce5754a3258b8314b0d0a97fa6b39f0be2e5[m
+Author: Alex <beragumbo@ya.ru>
+Date:   Sat Sep 21 11:00:50 2019 +0300
+
+    add
+
+[33mcommit 9e08c4e11e3963781195a7347c9367da316d4c47[m
+Author: Alex <beragumbo@ya.ru>
+Date:   Fri Aug 30 12:32:32 2019 +0300
+
+    Create GyverLamp.aia
+
+[33mcommit 90a13acc748acd0b373799b2c2e645ab04c3408c[m
+Author: Alex <beragumbo@ya.ru>
+Date:   Tue Jul 2 15:41:10 2019 +0300
+
+    add
+
+[33mcommit cd6f19e76087bc387fee675ef5b37872cb7d95b0[m
+Author: Alex <beragumbo@ya.ru>
+Date:   Tue Jul 2 00:08:20 2019 +0300
+
+    Update time.ino
+
+[33mcommit 7d35d0095282441e73dbfc8e97ccf5567d40c313[m
+Author: Alex <beragumbo@ya.ru>
+Date:   Sun Jun 30 22:51:40 2019 +0300
+
+    add
+
+[33mcommit bbf423bde616b9809ee3f22df8a000c8deb291a3[m
+Author: Alex <beragumbo@ya.ru>
+Date:   Sun Jun 30 19:46:37 2019 +0300
+
+    upd
+
+[33mcommit 201bc70929ef6797302f022bb189496e385cc5a6[m
+Author: Alex <beragumbo@ya.ru>
+Date:   Sun Jun 16 12:28:27 2019 +0300
+
+    Update effects.ino
+
+[33mcommit fa4bec7500e9f13837368bc4a651ff9665b74717[m
+Author: Alex <beragumbo@ya.ru>
+Date:   Sun Jun 16 10:26:10 2019 +0300
+
+    Update GyverLamp_v1.2.ino
+
+[33mcommit 440e971d1cb65b566666e9d3fe83730ec31c71be[m
+Author: Alex <beragumbo@ya.ru>
+Date:   Sun Jun 16 10:25:40 2019 +0300
+
+    add
+
+[33mcommit ed2fb0dcc006cbbca566bd494b82c6353269e12b[m
+Author: Alex <beragumbo@ya.ru>
+Date:   Sat Jun 15 22:43:47 2019 +0300
+
+    add
+
+[33mcommit 364bd6a7592aed6826b7beca036eddba7040b4ea[m
+Author: Alex <beragumbo@ya.ru>
+Date:   Sat Jun 15 10:25:33 2019 +0300
+
+    Update README.md
+
+[33mcommit 0ac01bcafa133feb3be1b146a25be7dacc731393[m
+Author: Alex <beragumbo@ya.ru>
+Date:   Fri Jun 14 10:51:38 2019 +0300
+
+    Update button.ino
+
+[33mcommit 2f9f6bffeb122711f83fcf62e69cdbc00c7c07df[m
+Author: Alex <beragumbo@ya.ru>
+Date:   Fri Jun 14 10:29:09 2019 +0300
+
+    add
+
+[33mcommit edb18a28c3e2a50f836d0c5ae1392b8584401306[m
+Author: Alex <beragumbo@ya.ru>
+Date:   Fri Jun 14 10:01:50 2019 +0300
+
+    add
+
+[33mcommit 7a6ae9243bc47d80bad0a5c62e6ebf59f0516113[m
+Author: Alex <beragumbo@ya.ru>
+Date:   Thu Jun 13 22:46:01 2019 +0300
+
+    upd
+
+[33mcommit f440172c8f283e86b77a8b65b78bf816aa4fd4d4[m
+Author: Alex <beragumbo@ya.ru>
+Date:   Thu Jun 13 18:39:38 2019 +0300
+
+    upd
+
+[33mcommit b93c4978eff355cf912ef84d036231996754e053[m
+Author: Alex <beragumbo@ya.ru>
+Date:   Thu Jun 13 15:58:26 2019 +0300
+
+    upd
+
+[33mcommit 6597bf74d455ab7d82d7009133677385914d8ab5[m
+Author: Alex <beragumbo@ya.ru>
+Date:   Thu Jun 13 14:14:42 2019 +0300
+
+    Update README.md
+
+[33mcommit 7612db75b1a6a68a3b1eab7711458c355fd55c50[m
+Author: Alex <beragumbo@ya.ru>
+Date:   Thu Jun 13 14:03:00 2019 +0300
+
+    add
+
+[33mcommit 53b74e6db48950300d9127036d68d131a2e264ed[m
+Author: Alex <beragumbo@ya.ru>
+Date:   Mon Jun 10 18:33:59 2019 +0300
+
+    add
+
+[33mcommit 6e25ac7d47ec6a2d22832cfd7ad1eb055b820bc1[m
+Author: Alex <beragumbo@ya.ru>
+Date:   Mon Jun 10 18:32:35 2019 +0300
+
+    Initial commit
