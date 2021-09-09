@@ -49,22 +49,22 @@
 ## Материалы и компоненты
 ### Ссылки оставлены на магазины, с которых я закупаюсь уже не один год
 Wemos D1 mini – искать
-* https://ali.ski/aKZs9
-* https://ali.ski/uPoqu
-* https://ali.ski/-VjNuh
-* https://ali.ski/Avqtk
+* https://ali.ski/1_oipS
+* https://ali.ski/EO_w2z
+* https://ali.ski/QKymk
+* https://ali.ski/Pzxf_G
 NodeMCU – искать
-* https://ali.ski/yDIl0Z
-* https://ali.ski/UTwAyZ
+* https://ali.ski/F2FeBB
+* https://ali.ski/j76J_I
 Матрица 16×16 – искать
-* https://ali.ski/pOMcck
-* https://ali.ski/nSJCP
-* https://ali.ski/hI6tov
-* https://ali.ski/ZSliU7
+* https://ali.ski/lkB8g
+* https://ali.ski/CaiZgG
+* https://ali.ski/9hcHX
+* https://ali.ski/4zxlz
 * Матрица 8×8 купить в РФ
 Адресная лента (для DIY матрицы)
-* https://ali.ski/crrqi1
-* https://ali.ski/2I3be
+* https://ali.ski/oEXGJI
+* https://ali.ski/VuxYof
 * Купить в РФ, 60 свет/метр, 30 свет/метр
 * Black PCB / White PCB – цвет подложки ленты, чёрная / белая. В видео была чёрная
 * 1m/5m – длина ленты в метрах (чтобы заказать 2 метра, берите два заказа 1m, очевидно)
@@ -74,17 +74,17 @@ NodeMCU – искать
 * IP67 лента полностью в силиконовом коробе
 * Постфикс ECO – лента чуть более низкого качества, меньше меди, на длинной ленте будет сильно проседать яркость
 Сенсорная кнопка – искать
-* http://ali.ski/aWQBAa
-* http://ali.ski/rsOrSB
+* https://ali.ski/zzTzeO
+* https://ali.ski/DbCM-A
 * БП 5V искать (минимум 3A на каждые 100 LED)
-* https://ali.ski/DItEG
-* https://ali.ski/t3YFfU
-* Мощные https://ali.ski/7Jg69
-* Мощные https://ali.ski/NGDrjQ
+* https://ali.ski/8dQhKV
+* https://ali.ski/-ppLAQ
+* Мощные https://ali.ski/UwKWR
+* Мощные https://ali.ski/W-3Gs
 * БП 60W (купить в РФ)
 * БП 100W (купить в РФ)
 Проводочки – искать
-* http://ali.ski/_SuCF
+* https://ali.ski/Jb-RZJ
 Сантех
 * Труба D50 длина 250
 * Труба D40 короткая
